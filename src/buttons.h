@@ -49,10 +49,3 @@ private:
 	//Message-callbacks
 	void OnClick();
 };
-
-class CButtonExit : public CButton
-{
-private:
-	//Message-callbacks
-	void OnClick();
-};

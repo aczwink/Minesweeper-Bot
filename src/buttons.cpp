@@ -95,9 +95,3 @@ void CButtonClearLog::OnClick()
 {
 	((CMainWindow *)this->GetParent())->listLog.Clear();
 }
-
-//CButtonExit Message-callbacks
-void CButtonExit::OnClick()
-{
-	this->GetParent()->PostMessage(MsgClose());
-}

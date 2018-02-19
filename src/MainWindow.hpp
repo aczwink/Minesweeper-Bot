@@ -45,7 +45,6 @@ private:
 	CButtonSolve buttonSolve;
 	CButtonStep buttonStep;
 	CButtonClearLog buttonClearLog;
-	CButtonExit buttonExit;
 	//Message-callbacks
 	bool OnCreate();
 	void OnDestroy();
@@ -53,20 +52,3 @@ private:
 	void OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam);
 };
 */
-/*#pragma once
-//SJCLib
-#include <SJCLibWindows.h>
-//Local
-#include "buttons.h"
-
-using namespace SJCLibWindows;
-
-class MainWindow : public CWindow
-{
-private:
-public:
-	//Functions
-	int OnCreate(CREATESTRUCT *pCreateStruct);
-	void OnSize(int resizingType, uint newWidth, uint newHeight);
-	void OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam);
-};*/

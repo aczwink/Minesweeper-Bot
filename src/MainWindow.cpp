@@ -53,9 +53,6 @@ bool MainWindow::OnCreate()
 	this->buttonClearLog.Create("Clear log", 0, 0, 0, 0, 0, *this);
 	this->buttonClearLog.SetFont(font);
 
-	this->buttonExit.Create("Exit", 0, 0, 0, 0, 0, *this);
-	this->buttonExit.SetFont(font);
-
 	this->PostMessageA(WM_USER_CREATED, 0, 0);
 
 	return true;
@@ -79,7 +76,6 @@ void MainWindow::OnSize(WPARAM resizingType, uint32 newWidth, uint32 newHeight)
 	CRect rcButtonSolve;
 	CRect rcButtonStep;
 	CRect rcButtonClearLog;
-	CRect rcButtonExit;
 
 	this->GetClientRect(&rcClient);
 
@@ -98,11 +94,6 @@ void MainWindow::OnSize(WPARAM resizingType, uint32 newWidth, uint32 newHeight)
 	rcButtonClearLog.right = rcButtonClearLog.left + rcButtonSolve.right;
 	rcButtonClearLog.bottom = rcButtonSolve.bottom;
 
-	rcButtonExit.left = rcButtonClearLog.right + 6;
-	rcButtonExit.top = rcButtonSolve.top;
-	rcButtonExit.right = rcButtonExit.left + rcButtonSolve.right;
-	rcButtonExit.bottom = rcButtonSolve.bottom;
-
 	rcCheckboxGuess.left = 5;
 	rcCheckboxGuess.top = rcButtonSolve.top - 5 - 20;
 	rcCheckboxGuess.right = 75;
@@ -118,7 +109,6 @@ void MainWindow::OnSize(WPARAM resizingType, uint32 newWidth, uint32 newHeight)
 	this->buttonSolve.SetPos(rcButtonSolve, SWP_NOZORDER);
 	this->buttonStep.SetPos(rcButtonStep, SWP_NOZORDER);
 	this->buttonClearLog.SetPos(rcButtonClearLog, SWP_NOZORDER);
-	this->buttonExit.SetPos(rcButtonExit, SWP_NOZORDER);
 }
 
 void MainWindow::OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam)
