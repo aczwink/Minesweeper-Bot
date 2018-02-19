@@ -18,6 +18,6 @@
 */
 #pragma once
 //Local
-#include "CMainWindow.h"
+#include "MainWindow.hpp"
 
 extern CMainWindow g_MainWindow;

@@ -16,45 +16,15 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-//SJC Libs
-#include <SJCWinLib.h>
 //Local
-#include "globals.h"
-#include "resource.h"
-//Namespaces
-using namespace SJCLib;
-using namespace SJCWinLib;
+#include "MainWindow.hpp"
 
-//Global Variables
-CModule g_Module;
-CMainWindow g_MainWindow;
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int32 Main(const String &programName, const FixedArray<String> &args)
 {
-	CApplication app;
-	CBrush backgroundBrush;
-	CIcon icon;
+	MainWindow *window = new MainWindow;
+	window->Show();
 
-#ifdef _DEBUG
-	CWindow *pConsole;
-
-	AllocateConsole();
-
-	pConsole = CWindow::GetConsoleWindow();
-	pConsole->SetText("MineSweeper Bot Debug Console");
-	pConsole->Move(0, 0, 500, 300);
-
-	stdOut << "Launching in Debug Mode" << endl;
-#endif
-
-	g_Module.Attach(hInstance);
-	backgroundBrush.CreateSystemColorBrush(COLOR_WINDOW);
-	icon.LoadSystemIcon(IDI_APPLICATION);
-	if(!g_Module.RegisterWindowClass(&backgroundBrush, LoadCursor(NULL, IDC_ARROW), &icon, &icon, APPLICATION_WNDCLASS))
-		return EXIT_FAILURE;
-
-	g_MainWindow.Create(APPLICATION_WNDCLASS, APPLICATION_TITLE, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 400, 200, g_Module);
-	g_MainWindow.Show(nCmdShow);
-
-	return app.Run();
+	EventQueue &eventQueue = EventQueue::GetGlobalQueue();
+	eventQueue.ProcessEvents();
+	return EXIT_SUCCESS;
 }

@@ -20,7 +20,7 @@
 #include "buttons.h"
 //Local
 #include "CLog.h"
-#include "CMainWindow.h"
+#include "MainWindow.hpp"
 #include "MineSweeperBot.h"
 #include "resource.h"
 //Namespaces
