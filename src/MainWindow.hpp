@@ -16,9 +16,9 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <ACStdLib.hpp>
-using namespace ACStdLib;
-using namespace ACStdLib::UI;
+#include <Std++.hpp>
+using namespace StdPlusPlus;
+using namespace StdPlusPlus::UI;
 
 class MainWindow : public MainAppWindow
 {
