@@ -10,10 +10,12 @@ else()
     message(FATAL_ERROR "Unknown build type. Must be either 'Debug' or 'Release'")
 endif()
 
-find_library(STDPLUSPLUS_LIBRARY NAMES Std++_d)
-find_library(STDPLUSPLUSSTATIC_LIBRARY NAMES Std++Static_d)
+find_package(StdPlusPlus REQUIRED)
 
-set(LIBS ${STDPLUSPLUS_LIBRARY} ${STDPLUSPLUSSTATIC_LIBRARY})
+#find_library(STDPLUSPLUS_LIBRARY NAMES Std++_d)
+#find_library(STDPLUSPLUSSTATIC_LIBRARY NAMES Std++Static_d)
+
+#set(LIBS ${STDPLUSPLUS_LIBRARY} ${STDPLUSPLUSSTATIC_LIBRARY})
 
 add_executable(MinesweeperBot src/main.cpp src/MainWindow.hpp src/MainWindow.cpp)
 target_link_libraries(MinesweeperBot ${LIBS})
