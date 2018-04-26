@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(MinesweeperBot)
-find_package(XP-CMake) #we need advanced cmake modules
+find_package(XP-CMake REQUIRED) #we need advanced cmake modules
 
 set(CMAKE_CXX_STANDARD 11)
 Compiler_AutoBuildType()
