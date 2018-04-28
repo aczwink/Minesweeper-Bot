@@ -24,7 +24,7 @@ class MainWindow : public MainAppWindow
 {
 public:
 	//Constructor
-	MainWindow();
+	MainWindow(EventQueue &eventQueue);
 };
 /*
 //SJC Libs

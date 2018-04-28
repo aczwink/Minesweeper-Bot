@@ -21,10 +21,11 @@
 
 int32 Main(const String &programName, const FixedArray<String> &args)
 {
-	MainWindow *window = new MainWindow;
+	StandardEventQueue eventQueue;
+
+	MainWindow *window = new MainWindow(eventQueue);
 	window->Show();
 
-	EventQueue &eventQueue = EventQueue::GetGlobalQueue();
 	eventQueue.ProcessEvents();
 	return EXIT_SUCCESS;
 }
