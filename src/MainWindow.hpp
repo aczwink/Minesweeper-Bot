@@ -25,6 +25,10 @@ class MainWindow : public MainAppWindow
 public:
 	//Constructor
 	MainWindow(EventQueue &eventQueue);
+
+private:
+	//Members
+	TextEdit *gameStateView;
 };
 /*
 //SJC Libs

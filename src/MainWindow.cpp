@@ -23,6 +23,20 @@
 MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 {
 	this->SetTitle(u8"Minesweeper Bot");
+
+	this->SetLayout(new VerticalLayout);
+
+	//top panel
+	WidgetContainer *gameControlPanel = new WidgetContainer(this);
+	gameControlPanel->SetLayout(new HorizontalLayout);
+	//left side
+	//this->gameStateView = new TextEdit(gameControlPanel);
+	//right side
+	WidgetContainer *panel = new WidgetContainer(gameControlPanel);
+	panel->SetLayout(new VerticalLayout);
+
+	PushButton *solve = new PushButton(panel);
+	solve->SetText(u8"Solve");
 }
 
 /*
