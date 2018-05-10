@@ -45,14 +45,9 @@ class MainWindow : public CWindow
 private:
 	//Variables
 	CListBox listLog;
-	CCheckBoxGuess guessCheckBox;
-	CButtonSolve buttonSolve;
-	CButtonStep buttonStep;
-	CButtonClearLog buttonClearLog;
 	//Message-callbacks
 	bool OnCreate();
 	void OnDestroy();
-	void OnSize(WPARAM resizingType, uint32 newWidth, uint32 newHeight);
 	void OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam);
 };
 */

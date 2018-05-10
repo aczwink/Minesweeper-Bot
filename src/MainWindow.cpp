@@ -30,13 +30,26 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 	WidgetContainer *gameControlPanel = new WidgetContainer(this);
 	gameControlPanel->SetLayout(new HorizontalLayout);
 	//left side
-	//this->gameStateView = new TextEdit(gameControlPanel);
+	this->gameStateView = new TextEdit(gameControlPanel);
+	this->gameStateView->SetEditable(false);
 	//right side
 	WidgetContainer *panel = new WidgetContainer(gameControlPanel);
 	panel->SetLayout(new VerticalLayout);
 
 	PushButton *solve = new PushButton(panel);
 	solve->SetText(u8"Solve");
+
+	PushButton *step = new PushButton(panel);
+	step->SetText(u8"Step");
+
+	PushButton *clearLog = new PushButton(panel);
+	clearLog->SetText(u8"Clear Log");
+
+	CheckBox *guess = new CheckBox(panel);
+	guess->SetText(u8"Guess");
+
+	//bottom panel
+	ListView *log = new ListView(this);
 }
 
 /*
@@ -48,28 +61,7 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 //Message-callbacks
 bool MainWindow::OnCreate()
 {
-	CFont font;
-
-	font.CreateSystemFont(DEFAULT_GUI_FONT);
-
-	this->listLog.Create(WS_VSCROLL | WS_BORDER, 0, 0, 0, 0, 0, *this);
-	this->listLog.SetFont(font);
-
-	this->guessCheckBox.Create("Guess", 0, 0, 0, 0, 0, *this);
-	this->guessCheckBox.SetFont(font);
-
-	this->buttonSolve.Create("Solve", 0, 0, 0, 0, 0, *this);
-	this->buttonSolve.SetFont(font);
-
-	this->buttonStep.Create("Step", 0, 0, 0, 0, 0, *this);
-	this->buttonStep.SetFont(font);
-
-	this->buttonClearLog.Create("Clear log", 0, 0, 0, 0, 0, *this);
-	this->buttonClearLog.SetFont(font);
-
 	this->PostMessageA(WM_USER_CREATED, 0, 0);
-
-	return true;
 }
 
 void MainWindow::OnDestroy()
@@ -80,49 +72,6 @@ void MainWindow::OnDestroy()
 	bot.Release();
 	CLog::Close();
 	PostQuitMessage(EXIT_SUCCESS);
-}
-
-void MainWindow::OnSize(WPARAM resizingType, uint32 newWidth, uint32 newHeight)
-{
-	CRect rcClient;
-	CRect rcList;
-	CRect rcCheckboxGuess;
-	CRect rcButtonSolve;
-	CRect rcButtonStep;
-	CRect rcButtonClearLog;
-
-	this->GetClientRect(&rcClient);
-
-	rcButtonSolve.left = 5;
-	rcButtonSolve.top = rcClient.bottom - 5 - 23;
-	rcButtonSolve.right = 75;
-	rcButtonSolve.bottom = rcButtonSolve.top + 23;
-
-	rcButtonStep.left = rcButtonSolve.right + 6;
-	rcButtonStep.top = rcButtonSolve.top;
-	rcButtonStep.right = rcButtonStep.left + rcButtonSolve.right;
-	rcButtonStep.bottom = rcButtonSolve.bottom;
-
-	rcButtonClearLog.left = rcButtonStep.right + 6;
-	rcButtonClearLog.top = rcButtonSolve.top;
-	rcButtonClearLog.right = rcButtonClearLog.left + rcButtonSolve.right;
-	rcButtonClearLog.bottom = rcButtonSolve.bottom;
-
-	rcCheckboxGuess.left = 5;
-	rcCheckboxGuess.top = rcButtonSolve.top - 5 - 20;
-	rcCheckboxGuess.right = 75;
-	rcCheckboxGuess.bottom = rcCheckboxGuess.top + 20;
-
-	rcList.left = 5;
-	rcList.top = 5;
-	rcList.right = rcClient.right - 10;
-	rcList.bottom = rcCheckboxGuess.top - 5;
-
-	this->listLog.SetPos(rcList, SWP_NOZORDER);
-	this->guessCheckBox.SetPos(rcCheckboxGuess, SWP_NOZORDER);
-	this->buttonSolve.SetPos(rcButtonSolve, SWP_NOZORDER);
-	this->buttonStep.SetPos(rcButtonStep, SWP_NOZORDER);
-	this->buttonClearLog.SetPos(rcButtonClearLog, SWP_NOZORDER);
 }
 
 void MainWindow::OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam)
