@@ -16,9 +16,8 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <Std++.hpp>
-using namespace StdPlusPlus;
-using namespace StdPlusPlus::UI;
+//Local
+#include "MineSweeperBot.hpp"
 
 class MainWindow : public MainAppWindow
 {
@@ -28,6 +27,8 @@ public:
 
 private:
 	//Members
+	Log log;
+	UniquePointer<MineSweeperBot> bot;
 	TextEdit *gameStateView;
 };
 /*

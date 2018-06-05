@@ -17,7 +17,32 @@
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
 //Class Header
-#include "MineSweeperBot.h"
+#include "MineSweeperBot.hpp"
+
+//Constructor
+MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface, Log &log) : msInterface(Move(msInterface)), log(log)
+{
+	this->maxMoves = 0;
+}
+
+//Public methods
+bool MineSweeperBot::CanContinue()
+{
+	if (this->maxMoves <= 0)
+	{
+		LOG_WARNING(u8"Maximum number of runs exceeded");
+		return false;
+	}
+}
+
+void MineSweeperBot::Step()
+{
+	ASSERT(this->CanContinue(), u8"You called MineSweeperBot::Step though bot can't continue");
+
+	this->maxMoves--;
+	NOT_IMPLEMENTED_ERROR; //TODO
+}
+/*
 //SJC Libs
 #include <SJCWinLib.h>
 //Local
@@ -28,10 +53,11 @@ using namespace SJCWinLib;
 //Constructor
 MineSweeperBot::MineSweeperBot()
 {
+	CLog::Init();
+
 	this->columns = 0;
 	this->guess = 0;
 	this->isInitiated = false;
-	this->maxMoves = 0;
 	this->ppFields = NULL;
 	this->rows = 0;
 }
@@ -365,12 +391,6 @@ bool MineSweeperBot::Step()
 {
 	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
 
-	if(this->maxMoves-- < 0)
-	{
-		LOGWARNING("Maximum number of runs exceeded");
-		return false;
-	}
-
 	this->UpdateFields();
 	repeat(this->rows, row)
 	{
@@ -427,3 +447,4 @@ bool MineSweeperBot::Step()
 
 	return true;
 }
+*/

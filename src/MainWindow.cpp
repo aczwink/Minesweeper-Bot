@@ -18,6 +18,8 @@
 */
 //Class header
 #include "MainWindow.hpp"
+//Local
+#include "MineSweeperXPInterface.hpp"
 
 //Constructor
 MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
@@ -41,6 +43,10 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 
 	PushButton *step = new PushButton(panel);
 	step->SetText(u8"Step");
+	step->onActivatedHandler = [this]()
+	{
+		this->bot->Step();
+	};
 
 	PushButton *clearLog = new PushButton(panel);
 	clearLog->SetText(u8"Clear Log");
@@ -50,6 +56,8 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 
 	//bottom panel
 	ListView *log = new ListView(this);
+
+	this->bot = new MineSweeperBot(new MineSweeperXPInterface(this->log), this->log);
 }
 
 /*
@@ -72,23 +80,5 @@ void MainWindow::OnDestroy()
 	bot.Release();
 	CLog::Close();
 	PostQuitMessage(EXIT_SUCCESS);
-}
-
-void MainWindow::OnUserMessage(UINT message, WPARAM wParam, LPARAM lParam)
-{
-	MineSweeperBot &bot = MineSweeperBot::GetInstance();
-
-	switch(message)
-	{
-	case WM_USER_CREATED:
-		CLog::Init();
-		this->guessCheckBox.Check();
-		bot.SetGuess(true);
-		break;
-	case WM_USER_SOLVE:
-		if(bot.Step())
-			this->PostMessage(WM_USER_SOLVE, 0, 0);
-		break;
-	}
 }
 */

@@ -22,7 +22,6 @@
 int32 Main(const String &programName, const FixedArray<String> &args)
 {
 	StandardEventQueue eventQueue;
-
 	MainWindow *window = new MainWindow(eventQueue);
 	window->Show();
 

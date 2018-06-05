@@ -6,5 +6,5 @@ set(CMAKE_CXX_STANDARD 11)
 Compiler_AutoBuildType()
 find_package(StdPlusPlus REQUIRED)
 
-add_executable(MinesweeperBot src/main.cpp src/MainWindow.hpp src/MainWindow.cpp)
+add_executable(MinesweeperBot src/Log.cpp src/Log.hpp src/main.cpp src/MainWindow.hpp src/MainWindow.cpp src/MinesweeperBot.cpp src/MinesweeperBot.hpp src/MineSweeperInterface.hpp src/MineSweeperXPInterface.hpp)
 target_link_libraries(MinesweeperBot Std++ Std++Static)
