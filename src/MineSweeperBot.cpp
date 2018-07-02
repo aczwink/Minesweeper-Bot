@@ -20,28 +20,100 @@
 #include "MineSweeperBot.hpp"
 
 //Constructor
-MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface, Log &log) : msInterface(Move(msInterface)), log(log)
+MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface, Log &log) : msInterface(Move(msInterface)), log(log),
+	fields(this->msInterface->GetNumberOfRows(), this->msInterface->GetNumberOfColumns())
 {
-	this->maxMoves = 0;
+	//clear fields
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+			this->fields(row, col) = BoxState::Unknown;
+
+	this->UpdateFields();
 }
 
 //Public methods
 bool MineSweeperBot::CanContinue()
 {
-	if (this->maxMoves <= 0)
+	return true;
+}
+
+void MineSweeperBot::LogField()
+{
+	String fieldString;
+
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
 	{
-		LOG_WARNING(u8"Maximum number of runs exceeded");
-		return false;
+		fieldString += u8"|";
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+		{
+			switch (this->fields(row, col))
+			{
+			case BoxState::Unknown:
+				fieldString += u8"E"; //when we print this, no field should be unknown
+				break;
+			case BoxState::Unrevealed:
+				fieldString += u8"?";
+				break;
+			/*case BOXSTATE_EMPTY:
+				CLog::WriteString(" ");
+				break;
+			case BOXSTATE_DEFUSED:
+				CLog::WriteString("!");
+				break;
+			case BOXSTATE_MINE:
+				CLog::WriteString("X");
+				break;
+			case BOXSTATE_WRONGMINE:
+				CLog::WriteString("#");
+				break;
+			case BOXSTATE_1NEARBYBOMB:
+				CLog::WriteString("1");
+				break;
+			case BOXSTATE_2NEARBYBOMBS:
+				CLog::WriteString("2");
+				break;
+			case BOXSTATE_3NEARBYBOMBS:
+				CLog::WriteString("3");
+				break;
+			case BOXSTATE_4NEARBYBOMBS:
+				CLog::WriteString("4");
+				break;
+			case BOXSTATE_5NEARBYBOMBS:
+				CLog::WriteString("5");
+				break;
+			case BOXSTATE_6NEARBYBOMBS:
+				CLog::WriteString("6");
+				break;
+			case BOXSTATE_7NEARBYBOMBS:
+				CLog::WriteString("7");
+				break;
+			case BOXSTATE_8NEARBYBOMBS:
+				CLog::WriteString("8");
+				break;*/
+			}
+			fieldString += u8"|";
+		}
+		fieldString += u8"\r\n";
 	}
+
+	this->log.Field(fieldString);
 }
 
 void MineSweeperBot::Step()
 {
 	ASSERT(this->CanContinue(), u8"You called MineSweeperBot::Step though bot can't continue");
 
-	this->maxMoves--;
 	NOT_IMPLEMENTED_ERROR; //TODO
 }
+
+//Private methods
+void MineSweeperBot::UpdateFields()
+{
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+			this->fields(row, col) = this->msInterface->GetBoxState(row, col);
+}
+
 /*
 //SJC Libs
 #include <SJCWinLib.h>
@@ -303,21 +375,6 @@ bool MineSweeperBot::Guess()
 		}
 	}
 	return false;
-}
-
-void MineSweeperBot::UpdateFields()
-{
-	repeat(this->rows, row)
-	{
-		repeat(this->columns, column)
-		{
-			if(this->ppFields[row][column] == BOXSTATE_UNREVEALED)
-			{
-				this->ppFields[row][column] = MineSweeperInterface::GetInstance().GetBoxState(column, row);
-			}
-		}
-	}
-	//LOGFIELD();
 }
 
 //Public Functions

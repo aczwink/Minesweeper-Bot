@@ -16,46 +16,77 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
 #include <Std++.hpp>
 using namespace StdPlusPlus;
 using namespace StdPlusPlus::UI;
+
+//Forward declarations
+class MainWindow;
 
 class Log
 {
 public:
 	//Constructor
-	Log();
+	Log(MainWindow *mainWindow);
 
 	//Methods
-	void Warning(const String &msg);
+	void Error(const String &msg, const char *filename, const char *functionname, int lineno);
+	void Field(const String &fieldString);
+	void Info(const String &msg, const char *filename, const char *functionname, int lineno);
+	void Warning(const String &msg, const char *filename, const char *functionname, int lineno);
+
+	//Inline
+	inline const DynamicArray<String> &GetLines() const
+	{
+		return this->logLines;
+	}
+
+	inline String GetNewestField() const
+	{
+		if (this->logFields.IsEmpty())
+			return String();
+		auto it = this->logFields.end();
+		--it;
+		return (*it).value;
+	}
 
 private:
 	//Members
-	FileOutputStream logFile;
+	MainWindow * mainWindow;
+	DynamicArray<String> logLines;
+	Map<uint32, String> logFields;
+
+	//Methods
+	void WriteString(const String &msg);
+
+	//Inline
+	inline String GetTime() const
+	{
+		DateTime t = DateTime::Now();
+		return TimeZone::GetUserLocalTimeZone().Translate(t).ToISOString();
+	}
 };
 
-#define LOG_WARNING(msg) this->log.Warning(String(msg) + u8" [" + __FILE__ + u8", " + __FUNCTION__ + u8"(), " + String::Number(__LINE__) + u8"]");
+#define LOG_ERROR(msg) this->log.Error(msg, __FILE__, __FUNCTION__, __LINE__);
+#define LOG_INFO(msg) this->log.Info(msg, __FILE__, __FUNCTION__, __LINE__);
+#define LOG_WARNING(msg) this->log.Warning(msg, __FILE__, __FUNCTION__, __LINE__);
 /*
 //SJCLib
 #include <SJCLib.h>
 //Namespaces
 using namespace SJCLib;
 //Definitions
-#define LOGERROR(msg) CLog::Error((CString)msg + " [" + GetFullFileName(__FILE__) + ", " + __FUNCTION__ + "(), " + CString(__LINE__) + "]");
 #define LOGFIELD() CLog::Field("[" + GetFullFileName(__FILE__) + ", " + __FUNCTION__ + "(), " + CString(__LINE__) + "]");
-#define LOGINFO(msg) CLog::Info((CString)msg + " [" + GetFullFileName(__FILE__) + ", " + __FUNCTION__ + "(), " + CString(__LINE__) + "]");
 
 class CLog
 {
 private:
 	//Variables
 	static COFStream m_File;
-	//Functions
-	static void WriteString(CString refMsg);
 public:
 	//Functions
 	static void Close();
-	static void Error(CString msg);
 	static void Field(CString caller);
 	static void Info(CString msg);
 	static void Init();

@@ -27,13 +27,17 @@ public:
 
 	//Methods
 	bool CanContinue();
+	void LogField();
 	void Step();
 
 private:
 	//Members
-	uint16 maxMoves;
 	UniquePointer<MineSweeperInterface> msInterface;
+	FixedTable<BoxState> fields;
 	Log &log;
+
+	//Methods
+	void UpdateFields();
 };
 /*
 //Local

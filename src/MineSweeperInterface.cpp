@@ -37,37 +37,6 @@ MineSweeperInterface::~MineSweeperInterface()
 	this->Release();
 }
 
-//Private Functions
-uint32 MineSweeperInterface::GetBoxPixelChecksum(uint16 column, uint16 row)
-{
-	uint32 checksum = 0;
-	BITMAPINFO bi;
-	CPointer<CBitmap> bmp, oldBmp;
-	CPointer<CDeviceContext> memDC;
-	byte *pMemory;
-
-	MemZero(&bi, sizeof(bi));
-
-	bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bi.bmiHeader.biWidth = MINESWEEPER_BOXSIZE;
-	bi.bmiHeader.biHeight = -MINESWEEPER_BOXSIZE;
-	bi.bmiHeader.biPlanes = 1;
-	bi.bmiHeader.biBitCount = 24;
-
-	bmp = this->dc->CreateDIBSection(&bi, DIB_RGB_COLORS, (void **)&pMemory);
-	memDC = this->dc->CreateCompatibleDC();
-	oldBmp = memDC->SelectObject(bmp);
-	memDC->BitBlt(0, 0, MINESWEEPER_BOXSIZE, MINESWEEPER_BOXSIZE, *this->dc, MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE), MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE), SRCCOPY);
-	
-	for(int32 i = 0; i < MINESWEEPER_BOXSIZE * MINESWEEPER_BOXSIZE * 3; i+=3)
-	{
-		checksum += pMemory[i];
-		checksum += pMemory[i+1];
-		checksum += pMemory[i+2];
-	}
-	return checksum;
-}
-
 //Public Functions
 void MineSweeperInterface::Defuse(int32 column, int32 row)
 {
@@ -82,78 +51,10 @@ void MineSweeperInterface::Defuse(int32 column, int32 row)
 #endif
 }
 
-EBoxState MineSweeperInterface::GetBoxState(uint16 column, uint16 row)
-{
-	uint32 boxChecksum;
-	
-	if((column < 0) || (row < 0) || (column > this->GetNoOfColumns()-1) || (row > this->GetNoOfRows()-1))
-		return BOXSTATE_NOTEXISTENT;
-	
-	boxChecksum = this->GetBoxPixelChecksum(column, row);
-
-	switch(boxChecksum)
-	{
-		case MINESWEEPER_BOXCHECKSUMS_UNREVEALED:
-			return BOXSTATE_UNREVEALED;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_EMPTY:
-			return BOXSTATE_EMPTY;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_DEFUSED:
-			return BOXSTATE_DEFUSED;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_ACTIVEMINE:
-		case MINESWEEPER_BOXCHECKSUMS_MINE:
-			return BOXSTATE_MINE;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_WRONGMINE:
-			return BOXSTATE_WRONGMINE;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_1NEARBYBOMB:
-			return BOXSTATE_1NEARBYBOMB;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_2NEARBYBOMBS:
-			return BOXSTATE_2NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_3NEARBYBOMBS:
-			return BOXSTATE_3NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_4NEARBYBOMBS:
-			return BOXSTATE_4NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_5NEARBYBOMBS:
-			return BOXSTATE_5NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_6NEARBYBOMBS:
-			return BOXSTATE_6NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_7NEARBYBOMBS:
-			return BOXSTATE_7NEARBYBOMBS;
-		break;
-		case MINESWEEPER_BOXCHECKSUMS_8NEARBYBOMBS:
-			return BOXSTATE_8NEARBYBOMBS;
-		break;
-	}
-
-	LOGERROR("Interface couldn't detect field [" + CString(column) + "|" + CString(row) + "]. The checksum of the field is: " + CString(boxChecksum));
-
-	return BOXSTATE_UNKNOWN;
-}
-
 MineSweeperInterface &MineSweeperInterface::GetInstance()
 {
 	static MineSweeperInterface msi;
 	return msi;
-}
-
-uint32 MineSweeperInterface::GetNoOfColumns()
-{
-	return (this->rcClient.right - MINESWEEPER_LEFTSPACING - MINESWEEPER_RIGHTSPACING) / MINESWEEPER_BOXSIZE;
-}
-
-uint32 MineSweeperInterface::GetNoOfRows()
-{
-	return (this->rcClient.bottom - MINESWEEPER_TOPSPACING - MINESWEEPER_BOTTOMSPACING) / MINESWEEPER_BOXSIZE;
 }
 
 CDialog *MineSweeperInterface::GetWonDialog()
@@ -169,14 +70,9 @@ CDialog *MineSweeperInterface::GetWonDialog()
 
 bool MineSweeperInterface::Init()
 {
-	this->pMSWnd = CWindow::FindWindow(CString(), MINESWEEPER_WINDOWNAME);
-	if(!this->pMSWnd)
-		return false;
 	this->resolutionX = GetSystemMetrics(SM_CXSCREEN);
 	this->resolutionY = GetSystemMetrics(SM_CYSCREEN);
 	this->pMSWnd->GetRect(&this->rcWindow);
-	this->pMSWnd->GetClientRect(&this->rcClient);
-	this->dc = this->pMSWnd->GetDC();
 	
 	return true;
 }

@@ -16,30 +16,22 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
 //Local
 #include "Log.hpp"
 
-enum class BoxState
-{
-	Unknown, //The bot has to query the interface to tell him the state of the box
-	Unrevealed
-};
-
-class MineSweeperInterface
+class LogViewController : public ListController
 {
 public:
 	//Constructor
-	inline MineSweeperInterface(Log &log) : log(log)
+	inline LogViewController(const Log &log) : log(log)
 	{
 	}
 
-	//Abstract
-	virtual BoxState GetBoxState(uint16 row, uint16 col) const = 0;
-	virtual uint16 GetNumberOfColumns() const = 0;
-	virtual uint16 GetNumberOfRows() const = 0;
+	//Methods
+	uint32 GetNumberOfItems() const override;
+	String GetText(uint32 index) const override;
 
-protected:
+private:
 	//Members
-	Log &log;
+	const Log &log;
 };

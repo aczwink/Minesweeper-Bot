@@ -18,6 +18,7 @@
 */
 //Local
 #include "MineSweeperBot.hpp"
+#include "LogViewController.hpp"
 
 class MainWindow : public MainAppWindow
 {
@@ -25,11 +26,22 @@ public:
 	//Constructor
 	MainWindow(EventQueue &eventQueue);
 
+	//Methods
+	void LogFieldUpdated();
+	void LogLinesUpdated();
+
 private:
 	//Members
 	Log log;
 	UniquePointer<MineSweeperBot> bot;
 	TextEdit *gameStateView;
+	PushButton *solve;
+	PushButton *step;
+	ListView *logView;
+	LogViewController logViewController;
+
+	//Methods
+	void SetupBot();
 };
 /*
 //SJC Libs

@@ -16,6 +16,8 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+//Global
+#include <Windows.h>
 //Local
 #include "MineSweeperInterface.hpp"
 
@@ -23,8 +25,34 @@ class MineSweeperXPInterface : public MineSweeperInterface
 {
 public:
 	//Constructor
-	inline MineSweeperXPInterface(Log &log) : MineSweeperInterface(log)
+	inline MineSweeperXPInterface(Log &log) : MineSweeperInterface(log),
+		hMSWnd(nullptr)
 	{
+		this->AssertConnected();
+	}
+
+	//Destructor
+	~MineSweeperXPInterface();
+
+	//Methods
+	BoxState GetBoxState(uint16 row, uint16 col) const override;
+	uint16 GetNumberOfColumns() const override;
+	uint16 GetNumberOfRows() const override;
+
+private:
+	//Members
+	HWND hMSWnd;
+	RECT rcClient;
+	HDC hDC;
+
+	//Methods
+	bool Connect();
+	uint32 GetBoxPixelChecksum(uint16 column, uint16 row) const;
+
+	//Inline
+	inline void AssertConnected()
+	{
+		ASSERT(this->Connect(), u8"Couldn't connect to Minesweeper XP window");
 	}
 };
 /*
@@ -34,7 +62,6 @@ public:
 using namespace SJCLib;
 using namespace SJCWinLib;
 //Definitions
-#define MINESWEEPER_BOTTOMSPACING MINESWEEPER_RIGHTSPACING
 #define MINESWEEPER_BOXCHECKSUMS_1NEARBYBOMB 0x1F698
 #define MINESWEEPER_BOXCHECKSUMS_2NEARBYBOMBS 0x1B700
 #define MINESWEEPER_BOXCHECKSUMS_3NEARBYBOMBS 0x1DB02
@@ -47,20 +74,12 @@ using namespace SJCWinLib;
 #define MINESWEEPER_BOXCHECKSUMS_DEFUSED 0x1F88D
 #define MINESWEEPER_BOXCHECKSUMS_EMPTY 0x228C0
 #define MINESWEEPER_BOXCHECKSUMS_MINE 0x17E74
-#define MINESWEEPER_BOXCHECKSUMS_UNREVEALED 0x23F5E
 #define MINESWEEPER_BOXCHECKSUMS_WRONGMINE 0x17ACF
-#define MINESWEEPER_BOXSIZE 16
-#define MINESWEEPER_LEFTSPACING 12
 #define MINESWEEPER_MINESWEEPERFIELDNAME "MineSweeper"
-#define MINESWEEPER_RIGHTSPACING 8
-#define MINESWEEPER_TOPSPACING 55
-#define MINESWEEPER_WINDOWNAME "Minesweeper"
 
 enum EBoxState
 {
-	BOXSTATE_UNKNOWN, //this should never appear
 	BOXSTATE_NOTEXISTENT, //-1 -1 for instance does not exist //check usage
-	BOXSTATE_UNREVEALED,
 	BOXSTATE_EMPTY,
 	BOXSTATE_DEFUSED,
 	BOXSTATE_MINE, //if the bot fails
@@ -79,14 +98,9 @@ class MineSweeperInterface
 {
 private:
 	//Variables
-	CPointer<CDeviceContext> dc;
-	CWindow *pMSWnd;
-	CRect rcClient;
 	CRect rcWindow;
 	int32 resolutionX;
 	int32 resolutionY;
-	//Functions
-	uint32 GetBoxPixelChecksum(uint16 column, uint16 row);
 public:
 	//Constructor
 	MineSweeperInterface();

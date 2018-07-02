@@ -22,7 +22,7 @@
 #include "MineSweeperXPInterface.hpp"
 
 //Constructor
-MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
+MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue), log(this), logViewController(this->log)
 {
 	this->SetTitle(u8"Minesweeper Bot");
 
@@ -38,26 +38,55 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue)
 	WidgetContainer *panel = new WidgetContainer(gameControlPanel);
 	panel->SetLayout(new VerticalLayout);
 
-	PushButton *solve = new PushButton(panel);
-	solve->SetText(u8"Solve");
+	PushButton *connect = new PushButton(panel);
+	connect->SetText(u8"Connect");
+	connect->onActivatedHandler = [this]()
+	{
+		this->SetupBot();
+	};
 
-	PushButton *step = new PushButton(panel);
-	step->SetText(u8"Step");
-	step->onActivatedHandler = [this]()
+	this->solve = new PushButton(panel);
+	this->solve->SetText(u8"Solve");
+	this->solve->SetEnabled(false);
+
+	this->step = new PushButton(panel);
+	this->step->SetText(u8"Step");
+	this->step->SetEnabled(false);
+	this->step->onActivatedHandler = [this]()
 	{
 		this->bot->Step();
 	};
-
-	PushButton *clearLog = new PushButton(panel);
-	clearLog->SetText(u8"Clear Log");
 
 	CheckBox *guess = new CheckBox(panel);
 	guess->SetText(u8"Guess");
 
 	//bottom panel
-	ListView *log = new ListView(this);
+	this->logView = new ListView(this);
+	this->logView->SetController(this->logViewController);
+}
 
+//Public methods
+void MainWindow::LogFieldUpdated()
+{
+	this->gameStateView->SetText(this->log.GetNewestField());
+}
+
+void MainWindow::LogLinesUpdated()
+{
+	this->logView->GetController()->ModelChanged();
+}
+
+//Private methods
+void MainWindow::SetupBot()
+{
+	//TODO: there should be some kind of dialog that asks which interface should be used
 	this->bot = new MineSweeperBot(new MineSweeperXPInterface(this->log), this->log);
+
+	LOG_INFO(u8"Successfully connected");
+	this->bot->LogField();
+
+	this->solve->SetEnabled(true);
+	this->step->SetEnabled(true);
 }
 
 /*

@@ -18,19 +18,50 @@
 */
 //Class Header
 #include "Log.hpp"
+//Local
+#include "MainWindow.hpp"
 
 //Constructor
-Log::Log() : logFile(Path(u8"bot.log"))
+Log::Log(MainWindow *mainWindow) : mainWindow(mainWindow)
 {
+}
+
+//Public methods
+void Log::Error(const String &msg, const char *filename, const char *functionname, int lineno)
+{
+	String line = this->GetTime() + u8" ERROR:     " + msg + u8" [" + filename + u8", " + functionname + u8"(), " + String::Number(lineno) + u8"]";
+	this->logLines.Push(line);
+	this->mainWindow->LogLinesUpdated();
+}
+
+void Log::Field(const String &fieldString)
+{
+	this->logFields[this->logLines.GetNumberOfElements()] = fieldString;
+	this->mainWindow->LogFieldUpdated();
+}
+
+void Log::Info(const String &msg, const char *filename, const char *functionname, int lineno)
+{
+	String line = this->GetTime() + u8" INFO:     " + msg + u8" [" + filename + u8", " + functionname + u8"(), " + String::Number(lineno) + u8"]";
+	this->logLines.Push(line);
+	this->mainWindow->LogLinesUpdated();
+}
+
+void Log::Warning(const String &msg, const char *filename, const char *functionname, int lineno)
+{
+	String line = this->GetTime() + u8" WARNING:  " + msg + u8" [" + filename + u8", " + functionname + u8"(), " + String::Number(lineno) + u8"]";
+	this->logLines.Push(line);
+	this->mainWindow->LogLinesUpdated();
+}
+	/*
 	time_t timeStamp;
 	tm timeFormat;
 
 	timeStamp = time(NULL);
 	localtime_s(&timeFormat, &timeStamp);
 
-	this->WriteString(u8"Bot started on " + CString(timeFormat.tm_mday) + "." + CString(timeFormat.tm_mon + 1) + "." + CString(timeFormat.tm_year + 1900) + " " + CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec));
-	this->logFile << endl << endl;
-}
+	CString(timeFormat.tm_mday) + "." + CString(timeFormat.tm_mon + 1) + "." + CString(timeFormat.tm_year + 1900) + " " + CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec)
+	*/
 
 /*
 //Global
@@ -55,133 +86,5 @@ void CLog::WriteString(CString refMsg)
 void CLog::Close()
 {
 	m_File.Close();
-}
-
-void CLog::Error(CString msg)
-{
-	time_t timeStamp;
-	tm timeFormat;
-	CString message;
-
-	timeStamp = time(NULL);
-	localtime_s(&timeFormat, &timeStamp);
-	message = CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec) + " ERROR:     " + msg;
-	g_MainWindow.listLog.AddItem(message);
-	g_MainWindow.listLog.SetTopIndex(g_MainWindow.listLog.GetCount() - 1);
-	CLog::WriteString(message);
-	m_File << endl;
-}
-
-void CLog::Field(CString caller)
-{
-	time_t timeStamp;
-	tm timeFormat;
-	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
-	CString timeStr;
-
-	timeStamp = time(NULL);
-	localtime_s(&timeFormat, &timeStamp);
-
-	timeStr = CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec);
-
-	CLog::WriteString(timeStr + " INFO:     Current Field:");
-	m_File << endl;
-
-	repeat(msi.GetNoOfRows(), i)
-	{
-		repeat(timeStr.GetLength(), k)
-		{
-			CLog::WriteString(" ");
-		}
-		CLog::WriteString("             |");
-		repeat(msi.GetNoOfColumns(), j)
-		{
-			switch(msi.GetBoxState(j, i))
-			{
-				case BOXSTATE_UNKNOWN:
-					CLog::WriteString("E");
-				break;
-				case BOXSTATE_UNREVEALED:
-					CLog::WriteString("?");
-				break;
-				case BOXSTATE_EMPTY:
-					CLog::WriteString(" ");
-				break;
-				case BOXSTATE_DEFUSED:
-					CLog::WriteString("!");
-				break;
-				case BOXSTATE_MINE:
-					CLog::WriteString("X");
-				break;
-				case BOXSTATE_WRONGMINE:
-					CLog::WriteString("#");
-				break;
-				case BOXSTATE_1NEARBYBOMB:
-					CLog::WriteString("1");
-				break;
-				case BOXSTATE_2NEARBYBOMBS:
-					CLog::WriteString("2");
-				break;
-				case BOXSTATE_3NEARBYBOMBS:
-					CLog::WriteString("3");
-				break;
-				case BOXSTATE_4NEARBYBOMBS:
-					CLog::WriteString("4");
-				break;
-				case BOXSTATE_5NEARBYBOMBS:
-					CLog::WriteString("5");
-				break;
-				case BOXSTATE_6NEARBYBOMBS:
-					CLog::WriteString("6");
-				break;
-				case BOXSTATE_7NEARBYBOMBS:
-					CLog::WriteString("7");
-				break;
-				case BOXSTATE_8NEARBYBOMBS:
-					CLog::WriteString("8");
-				break;
-			}
-			CLog::WriteString("|");
-		}
-		m_File << endl;
-	}
-
-	repeat(timeStr.GetLength(), k)
-	{
-		CLog::WriteString(" ");
-	}
-	CLog::WriteString("           ");
-	CLog::WriteString(caller);
-	m_File << endl;
-}
-
-void CLog::Info(CString msg)
-{
-	time_t timeStamp;
-	tm timeFormat;
-	CString message;
-	
-	timeStamp = time(NULL);
-	localtime_s(&timeFormat, &timeStamp);
-	message = CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec) + " INFO:     " + msg;
-	g_MainWindow.listLog.AddItem(message);
-	g_MainWindow.listLog.SetTopIndex(g_MainWindow.listLog.GetCount() - 1);
-	CLog::WriteString(message);
-	m_File << endl;
-}
-
-void CLog::Warning(CString msg)
-{
-	time_t timeStamp;
-	tm timeFormat;
-	CString message;
-
-	timeStamp = time(NULL);
-	localtime_s(&timeFormat, &timeStamp);
-	message = CString(timeFormat.tm_hour) + ":" + CString(timeFormat.tm_min) + ":" + CString(timeFormat.tm_sec) + " WARNING:  " + msg;
-	g_MainWindow.listLog.AddItem(message);
-	g_MainWindow.listLog.SetTopIndex(g_MainWindow.listLog.GetCount() - 1);
-	CLog::WriteString(message);
-	m_File << endl;
 }
 */
