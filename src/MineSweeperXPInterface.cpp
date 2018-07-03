@@ -30,6 +30,8 @@
 
 #define MINESWEEPER_WINDOWNAME L"Minesweeper"
 
+#define MOUSE_MAXPOS 65535
+
 //Destructor
 MineSweeperXPInterface::~MineSweeperXPInterface()
 {
@@ -37,6 +39,21 @@ MineSweeperXPInterface::~MineSweeperXPInterface()
 }
 
 //Public methods
+void MineSweeperXPInterface::Defuse(uint32 column, uint32 row)
+{
+	this->MoveMouseOverField(column, row);
+#ifdef _USEMOUSE
+	SetForegroundWindow(this->hMsWnd);
+	mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, NULL);
+	mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, NULL);
+#else
+	int32 pos = MAKELPARAM(MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2), MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2));
+	SendMessageW(this->hMSWnd, WM_RBUTTONDOWN, 0, pos);
+	PDWORD_PTR result;
+	SendMessageTimeoutW(this->hMSWnd, WM_RBUTTONUP, 0, pos, SMTO_NORMAL, 500, nullptr);
+#endif
+}
+
 BoxState MineSweeperXPInterface::GetBoxState(uint16 row, uint16 col) const
 {
 	uint32 boxChecksum;
@@ -105,6 +122,21 @@ uint16 MineSweeperXPInterface::GetNumberOfRows() const
 	return (this->rcClient.bottom - MINESWEEPER_TOPSPACING - MINESWEEPER_BOTTOMSPACING) / MINESWEEPER_BOXSIZE;
 }
 
+void MineSweeperXPInterface::Reveal(uint32 column, uint32 row)
+{
+	this->MoveMouseOverField(column, row);
+#ifdef _USEMOUSE
+	SetForegroundWindow(this->hMsWnd);
+	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, NULL);
+	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, NULL);
+	Sleep(50);
+#else
+	int32 pos = MAKELPARAM(MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2), MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2));
+	SendMessageW(this->hMSWnd, WM_LBUTTONDOWN, 0, pos);
+	SendMessageTimeoutW(this->hMSWnd, WM_LBUTTONUP, 0, pos, SMTO_NORMAL, 50, nullptr);
+#endif
+}
+
 //Private methods
 bool MineSweeperXPInterface::Connect()
 {
@@ -152,4 +184,19 @@ uint32 MineSweeperXPInterface::GetBoxPixelChecksum(uint16 column, uint16 row) co
 	DeleteObject(bmp);
 	
 	return checksum;
+}
+
+void MineSweeperXPInterface::MoveMouseOverField(uint32 column, uint32 row)
+{
+	POINT point;
+	point.x = MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2);
+	point.y = MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2);
+	ClientToScreen(this->hMSWnd, &point);
+	this->MoveMouseTo((uint16)point.x, (uint16)point.y);
+	StdPlusPlus::Sleep(50 * 1000 * 1000);
+}
+
+void MineSweeperXPInterface::MoveMouseTo(uint16 x, uint16 y)
+{
+	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, x * MOUSE_MAXPOS / this->resolutionX, y * MOUSE_MAXPOS / this->resolutionY, 0, 0);
 }

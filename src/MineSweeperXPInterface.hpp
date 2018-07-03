@@ -29,25 +29,33 @@ public:
 		hMSWnd(nullptr)
 	{
 		this->AssertConnected();
+		this->resolutionX = GetSystemMetrics(SM_CXSCREEN);
+		this->resolutionY = GetSystemMetrics(SM_CYSCREEN);
 	}
 
 	//Destructor
 	~MineSweeperXPInterface();
 
 	//Methods
+	void Defuse(uint32 column, uint32 row) override;
 	BoxState GetBoxState(uint16 row, uint16 col) const override;
 	uint16 GetNumberOfColumns() const override;
 	uint16 GetNumberOfRows() const override;
+	void Reveal(uint32 column, uint32 row) override;
 
 private:
 	//Members
 	HWND hMSWnd;
 	RECT rcClient;
 	HDC hDC;
+	int32 resolutionX;
+	int32 resolutionY;
 
 	//Methods
 	bool Connect();
 	uint32 GetBoxPixelChecksum(uint16 column, uint16 row) const;
+	void MoveMouseOverField(uint32 column, uint32 row);
+	void MoveMouseTo(uint16 x, uint16 y);
 
 	//Inline
 	inline void AssertConnected()
@@ -82,7 +90,6 @@ enum EBoxState
 	BOXSTATE_NOTEXISTENT, //-1 -1 for instance does not exist //check usage
 	BOXSTATE_EMPTY,
 	BOXSTATE_DEFUSED,
-	BOXSTATE_MINE, //if the bot fails
 	BOXSTATE_WRONGMINE, //should never appear
 	BOXSTATE_1NEARBYBOMB,
 	BOXSTATE_2NEARBYBOMBS,
@@ -99,8 +106,6 @@ class MineSweeperInterface
 private:
 	//Variables
 	CRect rcWindow;
-	int32 resolutionX;
-	int32 resolutionY;
 public:
 	//Constructor
 	MineSweeperInterface();
@@ -116,7 +121,6 @@ public:
 	bool Init();
 	bool IsInitiated();
 	bool IsMineSweeperStillActive();
-	void MoveMouseOnField(int32 column, int32 row);
 	void Release();
 	void Reveal(int32 column, int32 row);
 };
@@ -130,15 +134,9 @@ public:
 
 using namespace SJCLibWindows;
 //definitions
-
-#define MOUSE_MAXPOS 65535
-
 class MineSweeperInterface
 {
 private:
-	//vars
-	//functions
-	void MoveMouse(ushort x, ushort y);
 	//constructor
 	MineSweeperInterface();
 public:

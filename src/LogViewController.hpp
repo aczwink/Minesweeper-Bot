@@ -23,7 +23,7 @@ class LogViewController : public ListController
 {
 public:
 	//Constructor
-	inline LogViewController(const Log &log) : log(log)
+	inline LogViewController(const Log &log, TextEdit *&logEntryView) : log(log), logEntryView(logEntryView)
 	{
 	}
 
@@ -34,4 +34,8 @@ public:
 private:
 	//Members
 	const Log &log;
+	TextEdit *&logEntryView;
+
+	//Eventhandlers
+	void OnSelectionChanged() const;
 };

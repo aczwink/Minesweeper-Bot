@@ -33,6 +33,7 @@ public:
 	//Methods
 	void Error(const String &msg, const char *filename, const char *functionname, int lineno);
 	void Field(const String &fieldString);
+	String GetField(uint32 index) const;
 	void Info(const String &msg, const char *filename, const char *functionname, int lineno);
 	void Warning(const String &msg, const char *filename, const char *functionname, int lineno);
 

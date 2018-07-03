@@ -40,6 +40,19 @@ void Log::Field(const String &fieldString)
 	this->mainWindow->LogFieldUpdated();
 }
 
+String Log::GetField(uint32 index) const
+{
+	while (index != Natural<uint32>::Max())
+	{
+		auto it = this->logFields.Find(index);
+		if (it != this->logFields.end())
+			return (*it).value;
+		index--;
+	}
+
+	return String();
+}
+
 void Log::Info(const String &msg, const char *filename, const char *functionname, int lineno)
 {
 	String line = this->GetTime() + u8" INFO:     " + msg + u8" [" + filename + u8", " + functionname + u8"(), " + String::Number(lineno) + u8"]";

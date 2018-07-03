@@ -18,7 +18,9 @@
 */
 //Local
 #include "MainWindow.hpp"
-
+#ifndef XPC_COMPILER_MSVC
+#error "HU"
+#endif
 int32 Main(const String &programName, const FixedArray<String> &args)
 {
 	StandardEventQueue eventQueue;

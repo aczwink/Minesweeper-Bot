@@ -19,6 +19,13 @@
 //Local
 #include "MineSweeperInterface.hpp"
 
+struct Field
+{
+	uint16 column;
+	uint16 row;
+	BoxState state;
+};
+
 class MineSweeperBot
 {
 public:
@@ -30,41 +37,41 @@ public:
 	void LogField();
 	void Step();
 
+	//Inline
+	inline void EnableGuessing(bool guess)
+	{
+		this->guess = guess;
+	}
+
 private:
 	//Members
+	bool guess;
 	UniquePointer<MineSweeperInterface> msInterface;
 	FixedTable<BoxState> fields;
 	Log &log;
 
 	//Methods
+	bool DoMove();
+	uint8 GetNumberOfNearbyMines(BoxState state);
+	DynamicArray<Field> GetSurroundingBoxes(uint16 column, uint16 row);
+	bool Guess();
+	void LogLikelihoodField(const FixedTable<float64> &likelihoods);
 	void UpdateFields();
 };
 /*
 //Local
 #include "MineSweeperInterface.hpp"
 
-//Structs
-struct SField
-{
-	int16 column;
-	int16 row;
-	EBoxState state;
-};
-
 class MineSweeperBot
 {
 private:
 	//Variables
 	bool isInitiated;
-	bool guess;
 	uint16 rows;
 	uint16 columns;
 	EBoxState **ppFields;
 	//Functions
-	bool DoMove();
 	void EnterName();
-	void GetSurroundingBoxes(uint16 column, uint16 row, CArray<SField> &surroundingBoxes);
-	bool Guess();
 	void UpdateFields();
 public:
 	//Constructor
@@ -77,7 +84,6 @@ public:
 	void Init();
 	bool IsInitiated();
 	void Release();
-	void SetGuess(bool guess);
 };
 
 /*#pragma once

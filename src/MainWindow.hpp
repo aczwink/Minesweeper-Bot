@@ -37,6 +37,7 @@ private:
 	TextEdit *gameStateView;
 	PushButton *solve;
 	PushButton *step;
+	CheckBox *guess;
 	ListView *logView;
 	LogViewController logViewController;
 

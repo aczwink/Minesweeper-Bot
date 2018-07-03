@@ -29,3 +29,13 @@ String LogViewController::GetText(uint32 index) const
 {
 	return this->log.GetLines()[index];
 }
+
+//Eventhandlers
+void LogViewController::OnSelectionChanged() const
+{
+	auto selection = this->view->GetSelectionController().GetSelectedIndexes();
+	if(selection.IsEmpty())
+		this->logEntryView->SetText(u8"");
+	else
+		this->logEntryView->SetText(this->log.GetField(selection[0].GetRow()));
+}

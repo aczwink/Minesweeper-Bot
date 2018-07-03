@@ -23,6 +23,7 @@
 MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface, Log &log) : msInterface(Move(msInterface)), log(log),
 	fields(this->msInterface->GetNumberOfRows(), this->msInterface->GetNumberOfColumns())
 {
+	this->guess = false;
 	//clear fields
 	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
 		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
@@ -34,6 +35,19 @@ MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface
 //Public methods
 bool MineSweeperBot::CanContinue()
 {
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+	{
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+		{
+			if (this->fields(row, col) == BoxState::Mine)
+			{
+				//LOGINFO("Damn... bot lost the game");
+				//LOGFIELD();
+				return false;
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -101,12 +115,229 @@ void MineSweeperBot::LogField()
 
 void MineSweeperBot::Step()
 {
-	ASSERT(this->CanContinue(), u8"You called MineSweeperBot::Step though bot can't continue");
+	bool didMove = false;
+	this->UpdateFields();
 
-	NOT_IMPLEMENTED_ERROR; //TODO
+	if (this->CanContinue())
+	{
+		if (this->DoMove()) //try to do a move
+		{
+			didMove = true;
+		}
+		else
+		{
+			if (this->guess)
+			{
+				if (this->Guess())
+					didMove = true;
+				else
+					NOT_IMPLEMENTED_ERROR; //todo: bot won the came i think
+			}
+			else
+			{
+				LOG_INFO(u8"No move could be made without needing to guess.");
+			}
+		}
+	}
+	else
+	{
+		LOG_INFO(u8"No move could be made.");
+	}
+
+	if (didMove)
+		this->LogField();
 }
 
 //Private methods
+bool MineSweeperBot::DoMove()
+{
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+	{
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+		{
+			uint8 nearbyMines = this->GetNumberOfNearbyMines(this->fields(row, col));
+			if (nearbyMines == Natural<uint8>::Max()) //don't know
+				continue;
+			DynamicArray<Field> surroundingBoxes = this->GetSurroundingBoxes(col, row);
+
+			uint8 unrevealedBoxCount = 0;
+			uint8 defusedBoxCount = 0;
+			for(const Field &f : surroundingBoxes)
+			{
+				if (f.state == BoxState::Unrevealed)
+					unrevealedBoxCount++;
+				if (f.state == BoxState::Defused)
+					defusedBoxCount++;
+			}
+			uint8 resultingNearbyMines = nearbyMines - defusedBoxCount;
+			
+			if (resultingNearbyMines == 0) //all nearby mines have been defused... reveal all unrevealed boxes
+			{
+				for (const Field &f : surroundingBoxes)
+				{
+					if (f.state == BoxState::Unrevealed)
+					{
+						LOG_INFO(u8"Revealing [" + String::Number(f.column) + u8"|" + String::Number(f.row) + u8"]");
+						this->msInterface->Reveal(f.column, f.row);
+						return true; //successfull move
+					}
+				}
+			}
+			if (unrevealedBoxCount == resultingNearbyMines) //same amount of unrevealed boxes and nearby mines... AND ... there are less defused fields than nearby mines
+			{
+				for (const Field &f : surroundingBoxes)
+				{
+					if (f.state == BoxState::Unrevealed)
+					{
+						LOG_INFO(u8"Defusing [" + String::Number(f.column) + "|" + String::Number(f.row) + u8"]");
+						this->msInterface->Defuse(f.column, f.row);
+						return true; //successfull move
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+uint8 MineSweeperBot::GetNumberOfNearbyMines(BoxState state)
+{
+	switch (state)
+	{
+	/*case BOXSTATE_1NEARBYBOMB:
+		nearbyMines = 1;
+		break;
+	case BOXSTATE_2NEARBYBOMBS:
+		nearbyMines = 2;
+		break;
+	case BOXSTATE_3NEARBYBOMBS:
+		nearbyMines = 3;
+		break;
+	case BOXSTATE_4NEARBYBOMBS:
+		nearbyMines = 4;
+		break;
+	case BOXSTATE_5NEARBYBOMBS:
+		nearbyMines = 5;
+		break;
+	case BOXSTATE_6NEARBYBOMBS:
+		nearbyMines = 6;
+		break;
+	case BOXSTATE_7NEARBYBOMBS:
+		nearbyMines = 7;
+		break;
+	case BOXSTATE_8NEARBYBOMBS:
+		nearbyMines = 8;
+		break;*/
+	case BoxState::Defused:
+	case BoxState::Mine:
+	case BoxState::Unknown:
+	case BoxState::Unrevealed:
+		return Natural<uint8>::Max();
+	}
+
+	return 0;
+}
+
+DynamicArray<Field> MineSweeperBot::GetSurroundingBoxes(uint16 column, uint16 row)
+{
+	DynamicArray<Field> result;
+	result.EnsureCapacity(8); //max number of surrounding boxes is 8
+	uint16 r = row - 1;
+	if (row == 0)
+		r = 0;
+	uint16 c = column - 1;
+	if (column == 0)
+		c = 0;
+
+	for (; r <= row + 1; r++)
+	{
+		if (r >= this->msInterface->GetNumberOfRows())
+			break; //out of bounds
+		for (; c <= column + 1; c++)
+		{
+			if (c >= this->msInterface->GetNumberOfColumns())
+				break; //out of bounds
+			if (r == row && c == column)
+				continue; //skip the field itself
+
+			Field f;
+			f.column = c;
+			f.row = r;
+			f.state = this->fields(r, c);
+			result.Push(f);
+		}
+	}
+
+	return result;
+}
+
+bool MineSweeperBot::Guess()
+{
+	FixedTable<float64> mineLikelihood(this->fields.GetNumberOfRows(), this->fields.GetNumberOfColumns());
+
+	//compute likelihood
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+	{
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+		{
+			if (this->fields(row, col) == BoxState::Unrevealed)
+			{
+				DynamicArray<Field> surroundingBoxes = this->GetSurroundingBoxes(col, row);
+				uint8 nPotentialMines = 0;
+
+				for (const Field &f : surroundingBoxes)
+				{
+					switch (f.state)
+					{
+					case BoxState::Defused:
+						break; //not of interest
+					case BoxState::Unrevealed:
+						nPotentialMines++; //we need to assume that its a mine
+						break;
+					}
+				}
+
+				mineLikelihood(row, col) = nPotentialMines / float64(surroundingBoxes.GetNumberOfElements());
+			}
+			else
+			{
+				mineLikelihood(row, col) = -1;
+			}
+		}
+	}
+
+	//TODO: from here
+
+	uint8 column = 0, row = 0;
+	LOG_INFO(u8"Guessing [" + String::Number(column) + u8"|" + String::Number(row) + u8"]");
+	this->LogLikelihoodField(mineLikelihood);
+	LOG_INFO(u8"Guessing [" + String::Number(column) + u8"|" + String::Number(row) + u8"]");
+
+	return true;
+}
+
+void MineSweeperBot::LogLikelihoodField(const FixedTable<float64> &likelihoods)
+{
+	String fieldString;
+	
+	for (uint32 row = 0; row < likelihoods.GetNumberOfRows(); row++)
+	{
+		fieldString += u8"|";
+		for (uint32 col = 0; col < likelihoods.GetNumberOfColumns(); col++)
+		{
+			if (likelihoods(row, col) == -1)
+				fieldString += u8"    ";
+			else
+				fieldString += String::Number(likelihoods(row, col), 3);
+			fieldString += u8"|";
+		}
+		fieldString += u8"\r\n";
+	}
+	
+	this->log.Field(fieldString);
+}
+
 void MineSweeperBot::UpdateFields()
 {
 	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
@@ -128,7 +359,6 @@ MineSweeperBot::MineSweeperBot()
 	CLog::Init();
 
 	this->columns = 0;
-	this->guess = 0;
 	this->isInitiated = false;
 	this->ppFields = NULL;
 	this->rows = 0;
@@ -142,100 +372,6 @@ MineSweeperBot::~MineSweeperBot()
 }
 
 //Private Functions
-bool MineSweeperBot::DoMove()
-{
-	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
-	CArray<SField> surroundingBoxes;
-	uint16 nearbyMines;
-	uint16 unrevealedBoxCount;
-	uint16 defusedBoxCount;
-	uint16 resultingNearbyMines;
-
-	repeat(this->rows, row)
-	{
-		repeat(this->columns, column)
-		{
-			switch(this->ppFields[row][column])
-			{
-				case BOXSTATE_1NEARBYBOMB:
-					nearbyMines = 1;
-				break;
-				case BOXSTATE_2NEARBYBOMBS:
-					nearbyMines = 2;
-				break;
-				case BOXSTATE_3NEARBYBOMBS:
-					nearbyMines = 3;
-				break;
-				case BOXSTATE_4NEARBYBOMBS:
-					nearbyMines = 4;
-				break;
-				case BOXSTATE_5NEARBYBOMBS:
-					nearbyMines = 5;
-				break;
-				case BOXSTATE_6NEARBYBOMBS:
-					nearbyMines = 6;
-				break;
-				case BOXSTATE_7NEARBYBOMBS:
-					nearbyMines = 7;
-				break;
-				case BOXSTATE_8NEARBYBOMBS:
-					nearbyMines = 8;
-				break;
-				default:
-					continue;
-				break;
-			}
-			
-			unrevealedBoxCount = 0;
-			defusedBoxCount = 0;
-			resultingNearbyMines = 0;
-			surroundingBoxes.Release();
-			this->GetSurroundingBoxes(column, row, surroundingBoxes);
-			
-			repeat(surroundingBoxes.GetLength(), b)
-			{
-				if(surroundingBoxes[b].state == BOXSTATE_UNREVEALED)
-				{
-					unrevealedBoxCount++;
-				}
-				if(surroundingBoxes[b].state == BOXSTATE_DEFUSED)
-				{
-					defusedBoxCount++;
-				}
-			}
-
-			resultingNearbyMines = nearbyMines - defusedBoxCount;
-			if(resultingNearbyMines == 0) //all nearby mines have been defused... reveal all unrevealed boxes
-			{
-				repeat(surroundingBoxes.GetLength(), b)
-				{
-					if(surroundingBoxes[b].state == BOXSTATE_UNREVEALED)
-					{
-						LOGINFO("Revealing [" + CString(surroundingBoxes[b].column) + "|" + CString(surroundingBoxes[b].row) + "]");
-						msi.MoveMouseOnField(surroundingBoxes[b].column, surroundingBoxes[b].row);
-						msi.Reveal(surroundingBoxes[b].column, surroundingBoxes[b].row);
-						return true; //successfull move
-					}
-				}
-			}
-			if(unrevealedBoxCount == resultingNearbyMines) //same amount of unrevealed boxes and nearby mines... AND ... there are less defused fields than nearby mines
-			{
-				repeat(surroundingBoxes.GetLength(), b)
-				{
-					if(surroundingBoxes[b].state == BOXSTATE_UNREVEALED)
-					{
-						LOGINFO("Defusing [" + CString(surroundingBoxes[b].column) + "|" + CString(surroundingBoxes[b].row) + "]");
-						msi.MoveMouseOnField(surroundingBoxes[b].column, surroundingBoxes[b].row);
-						msi.Defuse(surroundingBoxes[b].column, surroundingBoxes[b].row);
-						return true; //successfull move
-					}
-				}
-			}
-		}
-	}
-	return false;
-}
-
 void MineSweeperBot::EnterName()
 {
 	CDialog *pWonDialog, *pBestListDialog;
@@ -263,100 +399,6 @@ void MineSweeperBot::EnterName()
 	}
 }
 
-void MineSweeperBot::GetSurroundingBoxes(uint16 column, uint16 row, CArray<SField> &surroundingBoxes)
-{
-	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
-	SField f;
-
-	f.column = column-1;
-	f.row = row-1;
-	if(f.column >= 0 && f.row >= 0)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column;
-	f.row = row-1;
-	if(f.row >= 0)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column+1;
-	f.row = row-1;
-	if(f.row >= 0 && f.column < this->columns)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column-1;
-	f.row = row;
-	if(f.column >= 0)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column+1;
-	f.row = row;
-	if(f.column < this->columns)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column-1;
-	f.row = row+1;
-	if(f.column >= 0 && f.row < this->rows)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column;
-	f.row = row+1;
-	if(f.row < this->rows)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-
-	f.column = column+1;
-	f.row = row+1;
-	if(f.column < this->columns && f.row < this->rows)
-	{
-		f.state = this->ppFields[f.row][f.column];
-		if(f.state != BOXSTATE_NOTEXISTENT)
-		{
-			surroundingBoxes.Push(f);
-		}
-	}
-}
-
 bool MineSweeperBot::Guess()
 {
 	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
@@ -367,7 +409,6 @@ bool MineSweeperBot::Guess()
 		{
 			if(this->ppFields[row][column] == BOXSTATE_UNREVEALED)
 			{
-				LOGINFO("Guessing [" + CString(column) + "|" + CString(row) + "]");
 				msi.MoveMouseOnField(column, row);
 				msi.Reveal(column, row);
 				return true;
@@ -378,20 +419,6 @@ bool MineSweeperBot::Guess()
 }
 
 //Public Functions
-void MineSweeperBot::ClearFields()
-{
-	if(this->ppFields)
-	{
-		repeat(this->rows, row)
-		{
-			repeat(this->columns, column)
-			{
-				this->ppFields[row][column] = BOXSTATE_UNREVEALED;
-			}
-		}
-	}
-}
-
 MineSweeperBot &MineSweeperBot::GetInstance()
 {
 	static MineSweeperBot bot;
@@ -438,70 +465,11 @@ void MineSweeperBot::Release()
 	
 	this->isInitiated = false;
 }
+*/
 
-void MineSweeperBot::SetGuess(bool guess)
-{
-	this->guess = guess;
-}
-
-bool MineSweeperBot::Step()
-{
-	MineSweeperInterface &msi = MineSweeperInterface::GetInstance();
-
-	this->UpdateFields();
-	repeat(this->rows, row)
-	{
-		repeat(this->columns, column)
-		{
-			if(this->ppFields[row][column] == BOXSTATE_MINE)
-			{
-				LOGINFO("Damn... bot lost the game");
-				LOGFIELD();
-				this->Release();
-				msi.Release();
-				return false;
-			}
-		}
-	}
-
-	if(!this->DoMove())
-	{
-		if(this->guess)
-		{
-			if(!this->Guess())
-			{
-				LOGINFO("Bot won the game :)");
-				this->EnterName();
-				this->Release();
-				msi.Release();
-				
-				return false;
-			}
-		}
-		else
-		{
-			repeat(this->rows, row)
-			{
-				repeat(this->columns, column)
-				{
-					if(this->ppFields[row][column] == BOXSTATE_UNREVEALED)
-					{
-						LOGINFO("No move could be made.");
-						this->ClearFields();
-
-						return false;
-					}
-				}
-			}
-			LOGINFO("Bot won the game :)");
-			this->EnterName();
-			this->Release();
-			msi.Release();
-			
-			return false;
-		}
-	}
-
-	return true;
-}
+/*
+LOGINFO("Bot won the game :)");
+this->EnterName();
+this->Release();
+msi.Release();
 */

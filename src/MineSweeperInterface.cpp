@@ -38,19 +38,6 @@ MineSweeperInterface::~MineSweeperInterface()
 }
 
 //Public Functions
-void MineSweeperInterface::Defuse(int32 column, int32 row)
-{
-#ifdef _USEMOUSE
-	SetForegroundWindow(this->hMsWnd);
-	mouse_event(MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, NULL);
-	mouse_event(MOUSEEVENTF_RIGHTUP, 0, 0, 0, NULL);
-#else
-	int32 pos = MAKELPARAM(MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2), MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2));
-	this->pMSWnd->SendMessage(WM_RBUTTONDOWN, 0, pos);
-	this->pMSWnd->SendMessage(WM_RBUTTONUP, 0, pos, SMTO_NORMAL, 500);
-#endif
-}
-
 MineSweeperInterface &MineSweeperInterface::GetInstance()
 {
 	static MineSweeperInterface msi;
@@ -70,8 +57,6 @@ CDialog *MineSweeperInterface::GetWonDialog()
 
 bool MineSweeperInterface::Init()
 {
-	this->resolutionX = GetSystemMetrics(SM_CXSCREEN);
-	this->resolutionY = GetSystemMetrics(SM_CYSCREEN);
 	this->pMSWnd->GetRect(&this->rcWindow);
 	
 	return true;
@@ -87,45 +72,13 @@ bool MineSweeperInterface::IsMineSweeperStillActive()
 	return this->pMSWnd->IsWindow();
 }
 
-void MineSweeperInterface::MoveMouseOnField(int32 column, int32 row)
-{
-#ifdef _USEMOUSE
-	POINT point;
-	point.x = MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2);
-	point.y = MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2);
-	ClientToScreen(this->hMsWnd, &point);
-	this->moveMouse((ushort)point.x, (ushort)point.y);
-	Sleep(50);
-#endif
-}
-
 void MineSweeperInterface::Release()
 {
 	this->dc.Release();
 	this->pMSWnd = NULL;
 }
 
-void MineSweeperInterface::Reveal(int32 column, int32 row)
-{
-#ifdef _USEMOUSE
-	SetForegroundWindow(this->hMsWnd);
-	mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, NULL);
-	mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, NULL);
-	Sleep(50);
-#else
-	int32 pos = MAKELPARAM(MINESWEEPER_LEFTSPACING + (column * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2), MINESWEEPER_TOPSPACING + (row * MINESWEEPER_BOXSIZE) + (MINESWEEPER_BOXSIZE / 2));
-	this->pMSWnd->SendMessage(WM_LBUTTONDOWN, 0, pos);
-	this->pMSWnd->SendMessage(WM_LBUTTONUP, 0, pos, SMTO_NORMAL, 50);
-#endif
-}
-
 /*
-//private functions
-void MineSweeperInterface::MoveMouse(ushort x, ushort y)
-{
-	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, x * MOUSE_MAXPOS / this->resolutionX, y * MOUSE_MAXPOS / this->resolutionY, 0, 0);
-}
-
 //public functions
 /*void MineSweeperInterface::markBox(ushort column, ushort row)
 {

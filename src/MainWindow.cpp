@@ -22,7 +22,7 @@
 #include "MineSweeperXPInterface.hpp"
 
 //Constructor
-MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue), log(this), logViewController(this->log)
+MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue), log(this), logViewController(this->log, this->gameStateView)
 {
 	this->SetTitle(u8"Minesweeper Bot");
 
@@ -57,8 +57,13 @@ MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue), log(
 		this->bot->Step();
 	};
 
-	CheckBox *guess = new CheckBox(panel);
-	guess->SetText(u8"Guess");
+	this->guess = new CheckBox(panel);
+	this->guess->SetText(u8"Guess");
+	this->guess->SetEnabled(false);
+	this->guess->onToggledHandler = [this]()
+	{
+		this->bot->EnableGuessing(this->guess->IsChecked());
+	};
 
 	//bottom panel
 	this->logView = new ListView(this);
@@ -87,6 +92,7 @@ void MainWindow::SetupBot()
 
 	this->solve->SetEnabled(true);
 	this->step->SetEnabled(true);
+	this->guess->SetEnabled(true);
 }
 
 /*
