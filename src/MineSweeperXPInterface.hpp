@@ -20,6 +20,8 @@
 #include <Windows.h>
 //Local
 #include "MineSweeperInterface.hpp"
+//Definitions
+#undef AppendMenu
 
 class MineSweeperXPInterface : public MineSweeperInterface
 {

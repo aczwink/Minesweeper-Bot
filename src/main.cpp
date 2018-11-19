@@ -18,15 +18,13 @@
 */
 //Local
 #include "MainWindow.hpp"
-#ifndef XPC_COMPILER_MSVC
-#error "HU"
-#endif
+
 int32 Main(const String &programName, const FixedArray<String> &args)
 {
 	StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Show();
+	//MainWindow *window = new MainWindow(eventQueue);
+	//window->Show();
 
-	eventQueue.ProcessEvents();
+	//eventQueue.ProcessEvents();
 	return EXIT_SUCCESS;
 }
