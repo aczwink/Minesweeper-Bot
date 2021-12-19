@@ -26,21 +26,6 @@
 //Namespaces
 using namespace SJCLib;
 
-//CCheckBoxGuess Message-callbacks
-void CCheckBoxGuess::OnClick()
-{
-	MineSweeperBot &bot = MineSweeperBot::GetInstance();
-
-	if(this->IsChecked())
-	{
-		bot.SetGuess(true);
-	}
-	else
-	{
-		bot.SetGuess(false);
-	}
-}
-
 //CButtonSolve Message-callbacks
 void CButtonSolve::OnClick()
 {

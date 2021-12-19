@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -16,6 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef XPC_OS_WINDOWS
 //Class header
 #include "MineSweeperXPInterface.hpp"
 
@@ -200,3 +201,4 @@ void MineSweeperXPInterface::MoveMouseTo(uint16 x, uint16 y)
 {
 	mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, x * MOUSE_MAXPOS / this->resolutionX, y * MOUSE_MAXPOS / this->resolutionY, 0, 0);
 }
+#endif

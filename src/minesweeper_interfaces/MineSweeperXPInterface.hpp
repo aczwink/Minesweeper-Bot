@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -16,6 +16,7 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifdef XPC_OS_WINDOWS
 //Global
 #include <Windows.h>
 //Local
@@ -147,3 +148,4 @@ public:
 	//functions
 //	void markBox(ushort column, ushort row);
 };*/
+#endif

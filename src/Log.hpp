@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -17,9 +17,9 @@
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#include <Std++.hpp>
-using namespace StdPlusPlus;
-using namespace StdPlusPlus::UI;
+#include <StdXX.hpp>
+using namespace StdXX;
+using namespace StdXX::UI;
 
 //Forward declarations
 class MainWindow;
@@ -56,7 +56,7 @@ private:
 	//Members
 	MainWindow * mainWindow;
 	DynamicArray<String> logLines;
-	Map<uint32, String> logFields;
+	BinaryTreeMap<uint32, String> logFields;
 
 	//Methods
 	void WriteString(const String &msg);

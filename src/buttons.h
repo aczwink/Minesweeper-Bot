@@ -22,13 +22,6 @@
 //Namespaces
 using namespace SJCWinLib;
 
-class CCheckBoxGuess : public CCheckBox
-{
-private:
-	//Message-callbacks
-	void OnClick();
-};
-
 class CButtonSolve : public CButton
 {
 private:

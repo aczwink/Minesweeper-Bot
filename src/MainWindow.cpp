@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -19,73 +19,91 @@
 //Class header
 #include "MainWindow.hpp"
 //Local
-#include "MineSweeperXPInterface.hpp"
+#include "minesweeper_interfaces/MineSweeperXPInterface.hpp"
+#include "minesweeper_interfaces/MemoryMineSweeper.hpp"
 
 //Constructor
-MainWindow::MainWindow(EventQueue &eventQueue) : MainAppWindow(eventQueue), log(this), logViewController(this->log, this->gameStateView)
+MainWindow::MainWindow(EventHandling::EventQueue &eventQueue) : MainAppWindow(eventQueue), log(this)
 {
 	this->SetTitle(u8"Minesweeper Bot");
 
-	this->SetLayout(new VerticalLayout);
+	this->GetContentContainer()->SetLayout(new VerticalLayout);
 
 	//top panel
-	WidgetContainer *gameControlPanel = new WidgetContainer(this);
-	gameControlPanel->SetLayout(new HorizontalLayout);
-	//left side
-	this->gameStateView = new TextEdit(gameControlPanel);
-	this->gameStateView->SetEditable(false);
-	//right side
-	WidgetContainer *panel = new WidgetContainer(gameControlPanel);
-	panel->SetLayout(new VerticalLayout);
+	CompositeWidget* gameControlPanel = new CompositeWidget();
+    gameControlPanel->SetLayout(new HorizontalLayout);
+    this->AddContentChild(gameControlPanel);
 
-	PushButton *connect = new PushButton(panel);
-	connect->SetText(u8"Connect");
-	connect->onActivatedHandler = [this]()
-	{
-		this->SetupBot();
-	};
+    //left side
+    this->gameStateView = new TextEdit();
+    this->gameStateView->Editable(false);
+    gameControlPanel->AddChild(this->gameStateView);
 
-	this->solve = new PushButton(panel);
-	this->solve->SetText(u8"Solve");
-	this->solve->SetEnabled(false);
+    //right side
+    CompositeWidget* panel = new CompositeWidget();
+    panel->SetLayout(new VerticalLayout);
+    gameControlPanel->AddChild(panel);
 
-	this->step = new PushButton(panel);
-	this->step->SetText(u8"Step");
-	this->step->SetEnabled(false);
-	this->step->onActivatedHandler = [this]()
-	{
-		this->bot->Step();
-	};
+    PushButton *connect = new PushButton();
+    connect->SetText(u8"Connect");
+    connect->onActivatedHandler = [this]()
+    {
+        this->SetupBot();
+    };
+    panel->AddChild(connect);
 
-	this->guess = new CheckBox(panel);
-	this->guess->SetText(u8"Guess");
-	this->guess->SetEnabled(false);
-	this->guess->onToggledHandler = [this]()
-	{
-		this->bot->EnableGuessing(this->guess->IsChecked());
-	};
+    this->solve = new PushButton();
+    this->solve->SetText(u8"Solve");
+    this->solve->SetEnabled(false);
+    panel->AddChild(this->solve);
 
-	//bottom panel
-	this->logView = new ListView(this);
-	this->logView->SetController(this->logViewController);
+    this->step = new PushButton();
+    this->step->SetText(u8"Step");
+    this->step->SetEnabled(false);
+    this->step->onActivatedHandler = [this]()
+    {
+        this->bot->Step();
+    };
+    panel->AddChild(this->step);
+
+    this->guess = new CheckBox();
+    this->guess->Text(u8"Guess");
+    this->guess->SetEnabled(false);
+    this->guess->toggled.Connect([this]()
+    {
+        this->bot->EnableGuessing(this->guess->Checked());
+    });
+    panel->AddChild(this->guess);
+
+    //bottom panel
+    this->logViewController = new LogViewController(this->log, this->gameStateView);
+    this->logView = new ListView();
+    this->logView->selectionChanged.Connect(this->logViewController.operator->(), &LogViewController::OnSelectionChanged);
+    this->logView->SetController(this->logViewController);
+    this->AddContentChild(this->logView);
 }
 
 //Public methods
 void MainWindow::LogFieldUpdated()
 {
-	this->gameStateView->SetText(this->log.GetNewestField());
+	this->gameStateView->Text(this->log.GetNewestField());
 }
 
 void MainWindow::LogLinesUpdated()
 {
-	this->logView->GetController()->ModelChanged();
+	this->logViewController->ModelChanged();
 }
 
 //Private methods
 void MainWindow::SetupBot()
 {
 	//TODO: there should be some kind of dialog that asks which interface should be used
-	this->bot = new MineSweeperBot(new MineSweeperXPInterface(this->log), this->log);
+#ifdef XPC_OS_WINDOWS
+	MineSweeperInterface* interface = new MineSweeperXPInterface(this->log);
+#else
+	MineSweeperInterface* interface = new MemoryMineSweeper(this->log, 16, 16, 40);
+#endif
+	this->bot = new MineSweeperBot(interface, this->log);
 
 	LOG_INFO(u8"Successfully connected");
 	this->bot->LogField();

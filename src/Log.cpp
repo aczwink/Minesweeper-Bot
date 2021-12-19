@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -36,13 +36,13 @@ void Log::Error(const String &msg, const char *filename, const char *functionnam
 
 void Log::Field(const String &fieldString)
 {
-	this->logFields[this->logLines.GetNumberOfElements()] = fieldString;
+	this->logFields[this->logLines.GetNumberOfElements() - 1] = fieldString;
 	this->mainWindow->LogFieldUpdated();
 }
 
 String Log::GetField(uint32 index) const
 {
-	while (index != Natural<uint32>::Max())
+	while (index != Unsigned<uint32>::Max())
 	{
 		auto it = this->logFields.Find(index);
 		if (it != this->logFields.end())

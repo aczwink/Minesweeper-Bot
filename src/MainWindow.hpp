@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -24,7 +24,7 @@ class MainWindow : public MainAppWindow
 {
 public:
 	//Constructor
-	MainWindow(EventQueue &eventQueue);
+	MainWindow(EventHandling::EventQueue &eventQueue);
 
 	//Methods
 	void LogFieldUpdated();
@@ -39,7 +39,7 @@ private:
 	PushButton *step;
 	CheckBox *guess;
 	ListView *logView;
-	LogViewController logViewController;
+	SharedPointer<LogViewController> logViewController;
 
 	//Methods
 	void SetupBot();

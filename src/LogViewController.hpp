@@ -31,11 +31,11 @@ public:
 	uint32 GetNumberOfItems() const override;
 	String GetText(uint32 index) const override;
 
+	//Eventhandlers
+	void OnSelectionChanged();
+
 private:
 	//Members
 	const Log &log;
 	TextEdit *&logEntryView;
-
-	//Eventhandlers
-	void OnSelectionChanged() const;
 };

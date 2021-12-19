@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -21,10 +21,10 @@
 
 int32 Main(const String &programName, const FixedArray<String> &args)
 {
-	StandardEventQueue eventQueue;
-	//MainWindow *window = new MainWindow(eventQueue);
-	//window->Show();
+	EventHandling::StandardEventQueue eventQueue;
+	MainWindow *window = new MainWindow(eventQueue);
+	window->Show();
 
-	//eventQueue.ProcessEvents();
+	eventQueue.ProcessEvents();
 	return EXIT_SUCCESS;
 }

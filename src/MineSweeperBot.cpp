@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -24,11 +24,6 @@ MineSweeperBot::MineSweeperBot(UniquePointer<MineSweeperInterface> &&msInterface
 	fields(this->msInterface->GetNumberOfRows(), this->msInterface->GetNumberOfColumns())
 {
 	this->guess = false;
-	//clear fields
-	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
-		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
-			this->fields(row, col) = BoxState::Unknown;
-
 	this->UpdateFields();
 }
 
@@ -41,8 +36,8 @@ bool MineSweeperBot::CanContinue()
 		{
 			if (this->fields(row, col) == BoxState::Mine)
 			{
-				//LOGINFO("Damn... bot lost the game");
-				//LOGFIELD();
+				LOG_INFO(u8"Damn... bot lost the game");
+				this->LogField();
 				return false;
 			}
 		}
@@ -62,11 +57,17 @@ void MineSweeperBot::LogField()
 		{
 			switch (this->fields(row, col))
 			{
-			case BoxState::Unknown:
-				fieldString += u8"E"; //when we print this, no field should be unknown
-				break;
 			case BoxState::Unrevealed:
 				fieldString += u8"?";
+				break;
+			case BoxState::Mine:
+				fieldString += u8"X";
+				break;
+			case BoxState::NearbyMines2:
+				fieldString += u8"2";
+				break;
+			case BoxState::NearbyMines4:
+				fieldString += u8"4";
 				break;
 			/*case BOXSTATE_EMPTY:
 				CLog::WriteString(" ");
@@ -74,23 +75,14 @@ void MineSweeperBot::LogField()
 			case BOXSTATE_DEFUSED:
 				CLog::WriteString("!");
 				break;
-			case BOXSTATE_MINE:
-				CLog::WriteString("X");
-				break;
 			case BOXSTATE_WRONGMINE:
 				CLog::WriteString("#");
 				break;
 			case BOXSTATE_1NEARBYBOMB:
 				CLog::WriteString("1");
 				break;
-			case BOXSTATE_2NEARBYBOMBS:
-				CLog::WriteString("2");
-				break;
 			case BOXSTATE_3NEARBYBOMBS:
 				CLog::WriteString("3");
-				break;
-			case BOXSTATE_4NEARBYBOMBS:
-				CLog::WriteString("4");
 				break;
 			case BOXSTATE_5NEARBYBOMBS:
 				CLog::WriteString("5");
@@ -145,7 +137,10 @@ void MineSweeperBot::Step()
 	}
 
 	if (didMove)
+	{
+		this->UpdateFields();
 		this->LogField();
+	}
 }
 
 //Private methods
@@ -156,7 +151,7 @@ bool MineSweeperBot::DoMove()
 		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
 		{
 			uint8 nearbyMines = this->GetNumberOfNearbyMines(this->fields(row, col));
-			if (nearbyMines == Natural<uint8>::Max()) //don't know
+			if (nearbyMines == Unsigned<uint8>::Max()) //don't know
 				continue;
 			DynamicArray<Field> surroundingBoxes = this->GetSurroundingBoxes(col, row);
 
@@ -205,11 +200,10 @@ uint8 MineSweeperBot::GetNumberOfNearbyMines(BoxState state)
 {
 	switch (state)
 	{
+	case BoxState ::NearbyMines2:
+		return 2;
 	/*case BOXSTATE_1NEARBYBOMB:
 		nearbyMines = 1;
-		break;
-	case BOXSTATE_2NEARBYBOMBS:
-		nearbyMines = 2;
 		break;
 	case BOXSTATE_3NEARBYBOMBS:
 		nearbyMines = 3;
@@ -231,9 +225,8 @@ uint8 MineSweeperBot::GetNumberOfNearbyMines(BoxState state)
 		break;*/
 	case BoxState::Defused:
 	case BoxState::Mine:
-	case BoxState::Unknown:
 	case BoxState::Unrevealed:
-		return Natural<uint8>::Max();
+		return Unsigned<uint8>::Max();
 	}
 
 	return 0;
@@ -302,17 +295,31 @@ bool MineSweeperBot::Guess()
 			}
 			else
 			{
-				mineLikelihood(row, col) = -1;
+				mineLikelihood(row, col) = 2;
 			}
 		}
 	}
 
-	//TODO: from here
-
-	uint8 column = 0, row = 0;
-	LOG_INFO(u8"Guessing [" + String::Number(column) + u8"|" + String::Number(row) + u8"]");
+	LOG_INFO(u8"Finding best guess box");
 	this->LogLikelihoodField(mineLikelihood);
-	LOG_INFO(u8"Guessing [" + String::Number(column) + u8"|" + String::Number(row) + u8"]");
+
+	uint16 bestCol = 0, bestRow = 0;
+	float64 best = mineLikelihood(0, 0);
+	for (uint32 row = 0; row < this->fields.GetNumberOfRows(); row++)
+	{
+		for (uint32 col = 0; col < this->fields.GetNumberOfColumns(); col++)
+		{
+			if(mineLikelihood(row, col) < best)
+			{
+				best = mineLikelihood(row, col);
+				bestCol = col;
+				bestRow = row;
+			}
+		}
+	}
+
+	LOG_INFO(u8"Guessing [" + String::Number(bestCol) + u8"|" + String::Number(bestRow) + u8"]");
+	this->msInterface->Reveal(bestCol, bestRow);
 
 	return true;
 }
@@ -326,10 +333,10 @@ void MineSweeperBot::LogLikelihoodField(const FixedTable<float64> &likelihoods)
 		fieldString += u8"|";
 		for (uint32 col = 0; col < likelihoods.GetNumberOfColumns(); col++)
 		{
-			if (likelihoods(row, col) == -1)
+			if (likelihoods(row, col) == 2)
 				fieldString += u8"    ";
 			else
-				fieldString += String::Number(likelihoods(row, col), 3);
+				fieldString += String::Number(likelihoods(row, col), FloatDisplayMode::FixedPointNotation, 3);
 			fieldString += u8"|";
 		}
 		fieldString += u8"\r\n";

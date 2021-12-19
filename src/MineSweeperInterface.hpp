@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -22,10 +22,11 @@
 
 enum class BoxState
 {
-	Unknown, //The bot has to query the interface to tell him the state of the box
 	Unrevealed,
 	Defused,
-	Mine //a revealed mine, i.e. when game was lost
+	Mine, //a revealed mine, i.e. when game was lost
+	NearbyMines2,
+	NearbyMines4
 };
 
 class MineSweeperInterface
@@ -36,12 +37,15 @@ public:
 	{
 	}
 
+	//Destructor
+	virtual ~MineSweeperInterface(){}
+
 	//Abstract
 	virtual void Defuse(uint32 column, uint32 row) = 0;
 	virtual BoxState GetBoxState(uint16 row, uint16 col) const = 0;
 	virtual uint16 GetNumberOfColumns() const = 0;
 	virtual uint16 GetNumberOfRows() const = 0;
-	virtual void Reveal(uint32 column, uint32 row) = 0;
+	virtual void Reveal(uint16 column, uint16 row) = 0;
 
 protected:
 	//Members

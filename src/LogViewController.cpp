@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2018,2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -31,11 +31,11 @@ String LogViewController::GetText(uint32 index) const
 }
 
 //Eventhandlers
-void LogViewController::OnSelectionChanged() const
+void LogViewController::OnSelectionChanged()
 {
-	auto selection = this->view->GetSelectionController().GetSelectedIndexes();
+	auto selection = this->view->SelectionController().GetSelectedIndexes();
 	if(selection.IsEmpty())
-		this->logEntryView->SetText(u8"");
+		this->logEntryView->Text(u8"");
 	else
-		this->logEntryView->SetText(this->log.GetField(selection[0].GetRow()));
+		this->logEntryView->Text(this->log.GetField(selection[0].GetRow()));
 }
