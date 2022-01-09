@@ -16,34 +16,37 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
 //Local
-#include "../MineSweeperInterface.hpp"
-
+#include "../model/MineSweeperInterface.hpp"
 
 class MemoryMineSweeper : public MineSweeperInterface
 {
-    struct Field
+    struct Field : public IndexedField
     {
-        BoxState state;
         bool isMine;
     };
 public:
     //Constructors
-    MemoryMineSweeper(Log &log, uint16 nRows, uint16 nCols, uint16 nMines);
+    MemoryMineSweeper(const FixedTable<bool>& mineDistribution);
+    MemoryMineSweeper(uint16 nRows, uint16 nCols, uint16 nMines);
 
     //Methods
-    void Defuse(uint32 column, uint32 row) override;
-    BoxState GetBoxState(uint16 row, uint16 col) const override;
-    uint16 GetNumberOfColumns() const override;
-    uint16 GetNumberOfRows() const override;
-    void Reveal(uint16 column, uint16 row) override;
+    void DoMove(const GameMove &move) override;
+    BoxState QueryBoxState(uint16 row, uint16 col) const override;
+    uint16 QueryNumberOfColumns() const override;
+    uint16 QueryNumberOfRows() const override;
 
 private:
     //Members
-    FixedTable<Field> gameState;
+    FixedTable<bool> mineDistribution;
+    FixedTable<BoxState> gameState;
 
     //Methods
-    DynamicArray<Field> CollectSurroundingBoxes(uint16 column, uint16 row) const;
-    BoxState ComputeRealBoxState(uint16 column, uint16 row) const;
+    void AutoRevealNeighborFields(uint16 row, uint16 column);
+    DynamicArray<Field> CollectSurroundingBoxes(uint16 row, uint16 column) const;
+    uint8 ComputeNumberOfNeighborMines(uint16 row, uint16 column) const;
+    BoxState ComputeRealBoxState(uint16 row, uint16 column) const;
     BoxState GetBoxStateForNumberOfSurroundingMines(uint8 nMines) const;
+    void InitGameState();
 };

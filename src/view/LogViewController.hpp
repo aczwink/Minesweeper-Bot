@@ -17,15 +17,28 @@
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
 //Local
-#include "view/MainWindow.hpp"
+#include "../model/MovesLogger.hpp"
+using namespace StdXX::UI;
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+class LogViewController : public ListController
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+public:
+    //Constructor
+    inline LogViewController(const MovesLogger& logger) : logger(logger)
+    {
+    }
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    //Methods
+    uint32 GetNumberOfItems() const override;
+    String GetText(uint32 index) const override;
+
+    //Inline
+    inline ControllerIndex GetNewestLineIndex() const
+    {
+        return this->GetChildIndex(this->GetNumberOfItems() - 1, Unsigned<uint32>::Max(), {});
+    }
+
+private:
+    //Members
+    const MovesLogger& logger;
+};

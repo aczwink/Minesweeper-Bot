@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2018 Amir Czwink (amir130@hotmail.de)
+* Copyright (c) 2021 Amir Czwink (amir130@hotmail.de)
 *
 * This file is part of Minesweeper-Bot.
 *
@@ -16,26 +16,18 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-//Local
-#include "Log.hpp"
+#pragma once
+#include <StdXX.hpp>
 
-class LogViewController : public ListController
+enum class GameMoveType
 {
-public:
-	//Constructor
-	inline LogViewController(const Log &log, TextEdit *&logEntryView) : log(log), logEntryView(logEntryView)
-	{
-	}
+    Defuse,
+    Reveal,
+};
 
-	//Methods
-	uint32 GetNumberOfItems() const override;
-	String GetText(uint32 index) const override;
-
-	//Eventhandlers
-	void OnSelectionChanged();
-
-private:
-	//Members
-	const Log &log;
-	TextEdit *&logEntryView;
+struct GameMove
+{
+    GameMoveType type;
+    uint16 row;
+    uint16 column;
 };

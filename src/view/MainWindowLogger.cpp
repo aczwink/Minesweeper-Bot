@@ -16,16 +16,29 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-//Local
-#include "view/MainWindow.hpp"
+//Class Header
+#include "MainWindowLogger.hpp"
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+//Public methods
+String MainWindowLogger::GetField(uint32 lineNumber) const
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+    return this->logFields[lineNumber];
+}
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
+String MainWindowLogger::GetLine(uint32 lineNumber) const
+{
+    return this->logLines[lineNumber];
+}
+
+uint32 MainWindowLogger::GetNumberOfLines() const
+{
+    return this->logLines.GetNumberOfElements();
+}
+
+void MainWindowLogger::Info(const String& text)
+{
+    String line = this->GetTime() + u8" INFO:     " + text;
+    this->logLines.Push(line);
+    this->logFields.Push(this->mineSweeperInterface.QueryState().ToString());
+    this->mainWindow.LogLinesUpdated();
 }

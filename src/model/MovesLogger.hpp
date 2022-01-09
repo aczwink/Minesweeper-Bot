@@ -16,16 +16,19 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-//Local
-#include "view/MainWindow.hpp"
+#pragma once
+#include <StdXX.hpp>
+using namespace StdXX;
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+class MovesLogger
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+public:
+    //Destructor
+    virtual ~MovesLogger(){}
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    //Abstract
+    virtual String GetField(uint32 lineNumber) const = 0;
+    virtual String GetLine(uint32 lineNumber) const = 0;
+    virtual uint32 GetNumberOfLines() const = 0;
+    virtual void Info(const String& text) = 0;
+};

@@ -27,14 +27,10 @@ class MainWindow;
 class Log
 {
 public:
-	//Constructor
-	Log(MainWindow *mainWindow);
-
 	//Methods
 	void Error(const String &msg, const char *filename, const char *functionname, int lineno);
 	void Field(const String &fieldString);
 	String GetField(uint32 index) const;
-	void Info(const String &msg, const char *filename, const char *functionname, int lineno);
 	void Warning(const String &msg, const char *filename, const char *functionname, int lineno);
 
 	//Inline
@@ -54,42 +50,8 @@ public:
 
 private:
 	//Members
-	MainWindow * mainWindow;
-	DynamicArray<String> logLines;
 	BinaryTreeMap<uint32, String> logFields;
 
 	//Methods
 	void WriteString(const String &msg);
-
-	//Inline
-	inline String GetTime() const
-	{
-		DateTime t = DateTime::Now();
-		return TimeZone::GetUserLocalTimeZone().Translate(t).ToISOString();
-	}
 };
-
-#define LOG_ERROR(msg) this->log.Error(msg, __FILE__, __FUNCTION__, __LINE__);
-#define LOG_INFO(msg) this->log.Info(msg, __FILE__, __FUNCTION__, __LINE__);
-#define LOG_WARNING(msg) this->log.Warning(msg, __FILE__, __FUNCTION__, __LINE__);
-/*
-//SJCLib
-#include <SJCLib.h>
-//Namespaces
-using namespace SJCLib;
-//Definitions
-#define LOGFIELD() CLog::Field("[" + GetFullFileName(__FILE__) + ", " + __FUNCTION__ + "(), " + CString(__LINE__) + "]");
-
-class CLog
-{
-private:
-	//Variables
-	static COFStream m_File;
-public:
-	//Functions
-	static void Close();
-	static void Field(CString caller);
-	static void Info(CString msg);
-	static void Init();
-};
-*/

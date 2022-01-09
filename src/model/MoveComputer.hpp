@@ -17,15 +17,29 @@
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
 //Local
-#include "view/MainWindow.hpp"
+#include "BoardState.hpp"
+#include "GameMove.hpp"
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+class MoveComputer
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+public:
+    //Methods
+    GameMove ComputeBestMove(const BoardState& boardState, bool& wasGuess) const;
+    /**
+     * The likelihood that a box contains a mine.
+     */
+    FixedTable<float64> ComputeMineLikelihood(const BoardState& boardState) const;
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    //Inline
+    inline GameMove ComputeBestMove(const BoardState& boardState) const
+    {
+        bool wasGuess;
+        return this->ComputeBestMove(boardState, wasGuess);
+    }
+
+private:
+    //Methods
+    GameMove ComputeBestMoveByGuessing(const BoardState& boardState) const;
+    Optional<GameMove> ComputeBestMoveWithoutGuessing(const BoardState& boardState) const;
+    uint8 GetNumberOfNearbyMines(BoxState state) const;
+};

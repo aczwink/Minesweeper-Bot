@@ -17,15 +17,34 @@
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
 //Local
-#include "view/MainWindow.hpp"
+#include "MineSweeperInterface.hpp"
+#include "MovesLogger.hpp"
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+class MineSweeperBot
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+public:
+    //Constructor
+    inline MineSweeperBot(MineSweeperInterface& mineSweeperInterface, MovesLogger& logger)
+        : mineSweeperInterface(mineSweeperInterface), logger(logger)
+    {
+        this->guess = false;
+    }
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    //Methods
+    void Step();
+
+    //Inline
+    inline void EnableGuessing(bool guess)
+    {
+        this->guess = guess;
+    }
+
+private:
+    //Members
+    bool guess;
+    MineSweeperInterface& mineSweeperInterface;
+    MovesLogger& logger;
+
+    //Methods
+    void DoMove(const BoardState& boardState);
+};

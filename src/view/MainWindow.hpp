@@ -16,16 +16,36 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
 //Local
-#include "view/MainWindow.hpp"
+#include "../minesweeper_interfaces/MemoryMineSweeper.hpp"
+#include "../model/MovesLogger.hpp"
+#include "LogViewController.hpp"
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+class MainWindow : public MainAppWindow
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
+public:
+    //Constructor
+    MainWindow(EventHandling::EventQueue &eventQueue);
 
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    //Methods
+    void LogLinesUpdated();
+
+private:
+    //Members
+    TextEdit *gameStateView;
+    PushButton *solve;
+    PushButton *step;
+    CheckBox *guess;
+    ListView *logView;
+    SharedPointer<LogViewController> logViewController;
+    UniquePointer<MovesLogger> logger;
+    UniquePointer<MineSweeperInterface> interface;
+
+    //Methods
+    void SetupInterface();
+    void Step();
+
+    //Event handlers
+    void OnLogSelectionChanged();
+};

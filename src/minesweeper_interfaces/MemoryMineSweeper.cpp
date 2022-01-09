@@ -19,24 +19,27 @@
 //Class header
 #include "MemoryMineSweeper.hpp"
 
-//Constructor
-MemoryMineSweeper::MemoryMineSweeper(Log &log, uint16 nRows, uint16 nCols, uint16 nMines)
-    : MineSweeperInterface(log),
-    gameState(nRows, nCols)
+//Constructors
+MemoryMineSweeper::MemoryMineSweeper(const FixedTable<bool> &mineDistribution)
+    : mineDistribution(mineDistribution), gameState(mineDistribution.GetNumberOfRows(), mineDistribution.GetNumberOfColumns())
 {
-    //clear fields
-    for (uint32 row = 0; row < this->gameState.GetNumberOfRows(); row++)
-    {
-        for (uint32 col = 0; col < this->gameState.GetNumberOfColumns(); col++)
-        {
-            auto& field = this->gameState(row, col);
+    this->InitGameState();
+}
 
-            field.state = BoxState::Unrevealed;
-            field.isMine = false;
+MemoryMineSweeper::MemoryMineSweeper(uint16 nRows, uint16 nCols, uint16 nMines)
+    : mineDistribution(nRows, nCols), gameState(nRows, nCols)
+{
+    this->InitGameState();
+
+    for (uint32 row = 0; row < this->mineDistribution.GetNumberOfRows(); row++)
+    {
+        for (uint32 col = 0; col < this->mineDistribution.GetNumberOfColumns(); col++)
+        {
+            this->mineDistribution(row, col) = false;
         }
     }
 
-    Math::MinStdRand randomNumberGenerator;
+    Math::MinStdRand randomNumberGenerator(static_cast<uint32>(DateTime::Now().Time().NanosecondsSinceStartOfDay()));
     Math::UniformUnsignedDistribution rowDistribution(randomNumberGenerator, 0_u16, uint16(nRows - 1));
     Math::UniformUnsignedDistribution colDistribution(randomNumberGenerator, 0_u16, uint16(nCols - 1));
     while(nMines)
@@ -44,44 +47,64 @@ MemoryMineSweeper::MemoryMineSweeper(Log &log, uint16 nRows, uint16 nCols, uint1
         uint16 row = rowDistribution.Next();
         uint16 col = colDistribution.Next();
 
-        if(!this->gameState(row, col).isMine)
+        if(!this->mineDistribution(row, col))
         {
-            this->gameState(row, col).isMine = true;
+            this->mineDistribution(row, col) = true;
             nMines--;
         }
     }
 }
 
 //Public methods
-void MemoryMineSweeper::Defuse(uint32 column, uint32 row)
+void MemoryMineSweeper::DoMove(const GameMove &move)
 {
-    NOT_IMPLEMENTED_ERROR; //TODO: implement me
+    auto& fieldState = this->gameState(move.row, move.column);
+    ASSERT_EQUALS(BoxState::Unrevealed, fieldState);
+
+    if(move.type == GameMoveType::Reveal)
+    {
+        fieldState = this->ComputeRealBoxState(move.row, move.column);
+        if(fieldState == BoxState::Empty)
+            this->AutoRevealNeighborFields(move.row, move.column);
+    }
+    else
+        fieldState = BoxState::Defused;
 }
 
-BoxState MemoryMineSweeper::GetBoxState(uint16 row, uint16 col) const
+BoxState MemoryMineSweeper::QueryBoxState(uint16 row, uint16 col) const
 {
-    return this->gameState(row, col).state;
+    return this->gameState(row, col);
 }
 
-uint16 MemoryMineSweeper::GetNumberOfColumns() const
+uint16 MemoryMineSweeper::QueryNumberOfColumns() const
 {
-    return this->gameState.GetNumberOfColumns();
+    return this->mineDistribution.GetNumberOfColumns();
 }
 
-uint16 MemoryMineSweeper::GetNumberOfRows() const
+uint16 MemoryMineSweeper::QueryNumberOfRows() const
 {
-    return this->gameState.GetNumberOfRows();
-}
-
-void MemoryMineSweeper::Reveal(uint16 column, uint16 row)
-{
-    auto& field = this->gameState(row, column);
-    ASSERT_EQUALS(BoxState::Unrevealed, field.state);
-    field.state = this->ComputeRealBoxState(column, row);
+    return this->mineDistribution.GetNumberOfRows();
 }
 
 //Private methods
-DynamicArray<MemoryMineSweeper::Field> MemoryMineSweeper::CollectSurroundingBoxes(uint16 column, uint16 row) const
+void MemoryMineSweeper::AutoRevealNeighborFields(uint16 row, uint16 column)
+{
+    DynamicArray<Field> neighbors = this->CollectSurroundingBoxes(row, column);
+
+    for(const Field& neighbor : neighbors)
+    {
+        if(this->gameState(neighbor.row, neighbor.column) == BoxState::Unrevealed)
+        {
+            GameMove gameMove;
+            gameMove.column = neighbor.column;
+            gameMove.row = neighbor.row;
+            gameMove.type = GameMoveType::Reveal;
+            this->DoMove(gameMove);
+        }
+    }
+}
+
+DynamicArray<MemoryMineSweeper::Field> MemoryMineSweeper::CollectSurroundingBoxes(uint16 row, uint16 column) const
 {
     DynamicArray<MemoryMineSweeper::Field> fields;
 
@@ -89,41 +112,71 @@ DynamicArray<MemoryMineSweeper::Field> MemoryMineSweeper::CollectSurroundingBoxe
     {
         for(int32 x = column - 1; x <= column + 1; x++)
         {
-            if((y >= 0) and (y < this->GetNumberOfRows()) and (x >= 0) and (x < this->GetNumberOfColumns()))
-                fields.Push(this->gameState(y, x));
+            if((y >= 0) and (y < this->QueryNumberOfRows()) and (x >= 0) and (x < this->QueryNumberOfColumns()))
+            {
+                Field field;
+                field.column = x;
+                field.row = y;
+                field.boxState = this->gameState(y, x);
+                field.isMine = this->mineDistribution(y, x);
+                fields.Push(field);
+            }
         }
     }
 
     return fields;
 }
 
-BoxState MemoryMineSweeper::ComputeRealBoxState(uint16 column, uint16 row) const
+uint8 MemoryMineSweeper::ComputeNumberOfNeighborMines(uint16 row, uint16 column) const
 {
-    const auto& field = this->gameState(row, column);
-    if(field.state == BoxState::Unrevealed)
+    DynamicArray<MemoryMineSweeper::Field> neighborFields = this->CollectSurroundingBoxes(row, column);
+    uint8 nMines = 0;
+    for(const auto& neighborField : neighborFields)
     {
-        if(field.isMine)
+        if(neighborField.isMine)
+            nMines++;
+    }
+    return nMines;
+}
+
+BoxState MemoryMineSweeper::ComputeRealBoxState(uint16 row, uint16 column) const
+{
+    const auto& fieldState = this->gameState(row, column);
+    if(fieldState == BoxState::Unrevealed)
+    {
+        if(this->mineDistribution(row, column))
             return BoxState::Mine;
 
-        DynamicArray<MemoryMineSweeper::Field> neighborFields = this->CollectSurroundingBoxes(column, row);
-        uint8 nMines = 0;
-        for(const auto& neighborField : neighborFields)
-        {
-            if(neighborField.isMine)
-                nMines++;
-        }
+        uint8 nMines = this->ComputeNumberOfNeighborMines(row, column);
         return this->GetBoxStateForNumberOfSurroundingMines(nMines);
 
     }
-    return field.state;
+    return fieldState;
+}
+
+void MemoryMineSweeper::InitGameState()
+{
+    for (uint32 row = 0; row < this->gameState.GetNumberOfRows(); row++)
+    {
+        for (uint32 col = 0; col < this->gameState.GetNumberOfColumns(); col++)
+        {
+            this->gameState(row, col) = BoxState::Unrevealed;
+        }
+    }
 }
 
 BoxState MemoryMineSweeper::GetBoxStateForNumberOfSurroundingMines(uint8 nMines) const
 {
     switch(nMines)
     {
+        case 0:
+            return BoxState::Empty;
+        case 1:
+            return BoxState::NearbyMines1;
         case 2:
             return BoxState::NearbyMines2;
+        case 3:
+            return BoxState::NearbyMines3;
         case 4:
             return BoxState::NearbyMines4;
         default:

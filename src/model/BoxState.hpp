@@ -16,16 +16,16 @@
 * You should have received a copy of the GNU General Public License
 * along with Minesweeper-Bot.  If not, see <http://www.gnu.org/licenses/>.
 */
-//Local
-#include "view/MainWindow.hpp"
+#pragma once
 
-int32 Main(const String &programName, const FixedArray<String> &args)
+enum class BoxState
 {
-	EventHandling::StandardEventQueue eventQueue;
-	MainWindow *window = new MainWindow(eventQueue);
-	window->Maximize();
-	window->Show();
-
-	eventQueue.ProcessEvents();
-	return EXIT_SUCCESS;
-}
+    Defused,
+    Empty,
+    Mine, //a revealed mine, i.e. when game was lost
+    NearbyMines1,
+    NearbyMines2,
+    NearbyMines3,
+    NearbyMines4,
+    Unrevealed,
+};
